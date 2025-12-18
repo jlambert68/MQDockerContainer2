@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package mqpb;
+
+option go_package = "/mqpb";
+
+service MQ {
+  rpc Put (PutRequest) returns (PutResponse);
+  rpc Get (GetRequest) returns (GetResponse);
+}
+
+message PutRequest {
+  string queue   = 1;
+  string message = 2;
+}
+
+message PutResponse {
+  string status = 1;
+  string error  = 2;
+}
+
+message GetRequest {
+  string queue        = 1;
+  int32  wait_ms      = 2;
+  int32  max_msg_bytes= 3;
+}
+
+message GetResponse {
+  string status  = 1;
+  string message = 2;
+  bool   empty   = 3;
+  string error   = 4;
+}
+

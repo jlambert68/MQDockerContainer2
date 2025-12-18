@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  mq:
+    image: icr.io/ibm-messaging/mq:9.3.0.25-r1
+    container_name: mq-local
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_APP_PASSWORD: passw0rd
+      # MQ_DEV defaults on in this image; it creates DEV.QUEUE.1 and DEV.APP.SVRCONN
+    ports:
+      - "1414:1414"   # MQ listener
+      - "9443:9443"   # Web console (optional)
+    volumes:
+      - qmdata:/mnt/mqm
+volumes:
+  qmdata:

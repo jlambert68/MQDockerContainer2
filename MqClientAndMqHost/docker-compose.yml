@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mq:
+    image: icr.io/ibm-messaging/mq:9.3.0.25-r1
+    container_name: mq-local
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_APP_PASSWORD: passw0rd
+    ports:
+      - "1414:1414"
+      - "9443:9443"
+
+  mq-gateway:
+    build: ./../mq-gateway
+    depends_on:
+      - mq
+    environment:
+      MQ_QMGR: "QM1"
+      MQ_HOST: "mq"                 # <— important: service name
+      MQ_PORT: "1414"
+      MQ_CHANNEL: "DEV.APP.SVRCONN"
+      MQ_USER: "app"
+      MQ_PASSWORD: "passw0rd"
+      REST_PORT: ":8080"
+      GRPC_PORT: ":9090"
+    ports:
+      - "8080:8080"
+      - "9090:9090"

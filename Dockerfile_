@@ -1,0 +1,50 @@
+FROM golang:1.25 AS build
+
+WORKDIR /src
+
+# Copy module files if present (go.sum is optional)
+COPY go.mod ./
+# Don't copy go.sum separately; just copy everything next
+COPY . .
+
+# Download deps (works even if go.sum doesn't exist)
+RUN go mod download
+
+# Build with debug flags
+RUN CGO_ENABLED=0 go build -gcflags="all=-N -l" -o /out/app ./cmd/app
+
+
+
+# Runtime stage (Debian-based is easiest for dlv)
+FROM debian:bookworm-slim
+WORKDIR /app
+
+# Install certs (optional but common)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# Copy binary
+COPY --from=build /out/app /app/app
+
+# Install Delve (download a released dlv binary via apt is not always available)
+# Easiest: copy dlv from a golang stage that installs it.
+# We'll do it via an extra stage.
+
+
+FROM golang:1.25 AS dlv
+
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+FROM debian:bookworm-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+COPY --from=build /out/app /app/app
+COPY --from=dlv /go/bin/dlv /usr/local/bin/dlv
+
+EXPOSE 8080 2345
+
+# Delve will launch your binary
+#CMD ["/app/app"]
+#CMD ["dlv", "exec", "/app/app", "--headless", "--listen=:2345", "--api-version=2", "--accept-multiclient", "--log"]
+CMD ["dlv","exec", "/app/app", "--headless", "--listen=:2345","--api-version=2", "--accept-multiclient","--continue","--log"]

@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "18080:8080"   # your HTTP service
+      - "2345:2345"   # delve
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_PTRACE
+    # Optional: helps with file-change workflows, not required for attach
+    # volumes:
+    #   - .:/src
+    # working_dir: /src
