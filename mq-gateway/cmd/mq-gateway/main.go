@@ -12,8 +12,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"mq-gateway/api/gprcsrv"
 	// 🔁 CHANGE THIS MODULE PREFIX to match your go.mod
-	"mq-gateway/api/grpcsrv"
 	"mq-gateway/api/proto/mqpb"
 	"mq-gateway/api/rest"
 	"mq-gateway/internal/mqcore"
