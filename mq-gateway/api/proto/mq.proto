@@ -4,9 +4,11 @@ package mqpb;
 
 option go_package = "/mqpb";
 
-service MQ {
-  rpc Put (PutRequest) returns (PutResponse);
-  rpc Get (GetRequest) returns (GetResponse);
+service MqGrpcServices {
+  rpc Put (PutRequest) returns (PutResponse) {
+  }
+  rpc Get (GetRequest) returns (GetResponse){
+  }
 }
 
 message PutRequest {
