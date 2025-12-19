@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/jlambert68/mq-gateway/api/proto/mqpb"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mqpb"
 )
 
 func getenv(k, d string) string {

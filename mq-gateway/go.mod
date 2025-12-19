@@ -1,4 +1,4 @@
-module mq-gateway
+module github.com/jlambert68/MQDockerContainer2/mq-gateway
 
 go 1.25.5
 
