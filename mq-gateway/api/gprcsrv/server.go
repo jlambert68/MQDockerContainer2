@@ -9,7 +9,7 @@ import (
 )
 
 type Server struct {
-	//mqpb.UnimplementedMQServer
+	mq_grpc_api.UnimplementedMqGrpcServicesServer
 	GW *mqcore.Gateway
 }
 

@@ -2,8 +2,8 @@ package rest
 
 import (
 	"encoding/json"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
 	"log"
-	"mq-gateway/internal/mqcore"
 	"net/http"
 )
 
