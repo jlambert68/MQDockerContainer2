@@ -12,11 +12,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	"mq-gateway/api/gprcsrv"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/gprcsrv"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 	// 🔁 CHANGE THIS MODULE PREFIX to match your go.mod
-	"mq-gateway/api/proto/mqpb"
-	"mq-gateway/api/rest"
-	"mq-gateway/internal/mqcore"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/rest"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
 )
 
 func getenv(key, def string) string {
@@ -27,7 +27,7 @@ func getenv(key, def string) string {
 }
 
 func main() {
-	log.Println("[main] starting mq-gateway")
+	log.Println("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway")
 
 	// ------------------------------------------------------------------
 	// 1. Connect to IBM MQ (once)
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	mqpb.RegisterMQServer(grpcServer, &grpcsrv.Server{
+	mq_grpc_api.RegisterMqGrpcServicesServer(grpcServer, &grpcsrv.Server{
 		GW: gateway,
 	})
 
@@ -103,5 +103,5 @@ func main() {
 		log.Printf("[REST] shutdown error: %v", err)
 	}
 
-	log.Println("[main] mq-gateway stopped cleanly")
+	log.Println("[main] github.com/jlambert68/MQDockerContainer2/mq-gateway stopped cleanly")
 }

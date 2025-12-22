@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"mq-gateway/api/proto/mqpb"
-	"mq-gateway/internal/mqcore"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
 )
 
 type Server struct {
@@ -13,9 +13,9 @@ type Server struct {
 	GW *mqcore.Gateway
 }
 
-func (s *Server) Put(ctx context.Context, req *mqpb.PutRequest) (*mqpb.PutResponse, error) {
+func (s *Server) Put(ctx context.Context, req *mq_grpc_api.PutRequest) (*mq_grpc_api.PutResponse, error) {
 	if req.GetQueue() == "" {
-		return &mqpb.PutResponse{
+		return &mq_grpc_api.PutResponse{
 			Status: "error",
 			Error:  "queue required",
 		}, nil
@@ -24,18 +24,18 @@ func (s *Server) Put(ctx context.Context, req *mqpb.PutRequest) (*mqpb.PutRespon
 	err := s.GW.Put(req.GetQueue(), req.GetMessage())
 	if err != nil {
 		log.Printf("[gRPC] Put error: %v", err)
-		return &mqpb.PutResponse{
+		return &mq_grpc_api.PutResponse{
 			Status: "error",
 			Error:  err.Error(),
 		}, nil
 	}
 
-	return &mqpb.PutResponse{Status: "ok"}, nil
+	return &mq_grpc_api.PutResponse{Status: "ok"}, nil
 }
 
-func (s *Server) Get(ctx context.Context, req *mqpb.GetRequest) (*mqpb.GetResponse, error) {
+func (s *Server) Get(ctx context.Context, req *mq_grpc_api.GetRequest) (*mq_grpc_api.GetResponse, error) {
 	if req.GetQueue() == "" {
-		return &mqpb.GetResponse{
+		return &mq_grpc_api.GetResponse{
 			Status: "error",
 			Error:  "queue required",
 		}, nil
@@ -44,13 +44,13 @@ func (s *Server) Get(ctx context.Context, req *mqpb.GetRequest) (*mqpb.GetRespon
 	msg, empty, err := s.GW.Get(req.GetQueue(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
 	if err != nil {
 		log.Printf("[gRPC] Get error: %v", err)
-		return &mqpb.GetResponse{
+		return &mq_grpc_api.GetResponse{
 			Status: "error",
 			Error:  err.Error(),
 		}, nil
 	}
 
-	return &mqpb.GetResponse{
+	return &mq_grpc_api.GetResponse{
 		Status:  "ok",
 		Message: msg,
 		Empty:   empty,

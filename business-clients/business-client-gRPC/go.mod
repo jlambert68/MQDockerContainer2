@@ -3,7 +3,7 @@ module business-client-gRPC
 go 1.25.5
 
 require (
-	github.com/jlambert68/MQDockerContainer2/mq-gateway v0.0.0-20251219104855-c1218bdaeb20
+	github.com/jlambert68/MQDockerContainer2/mq-gateway v0.0.0-20251221092550-0072bc1c9b30
 	google.golang.org/grpc v1.77.0
 )
 

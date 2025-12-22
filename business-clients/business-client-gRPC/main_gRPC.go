@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mqpb"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 	"log"
 	"os"
 	"time"
 
 	"google.golang.org/grpc"
-	//"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mqpb"
+	//"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 )
 
 func getenv(k, d string) string {
@@ -28,13 +28,13 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := mqpb.NewMQClient(conn)
+	client := mq_grpc_api.NewMqGrpcServicesClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// PUT
-	putResp, err := client.Put(ctx, &mqpb.PutRequest{
+	putResp, err := client.Put(ctx, &mq_grpc_api.PutRequest{
 		Queue:   "DEV.QUEUE.1",
 		Message: "Hello via gRPC!",
 	})
@@ -44,7 +44,7 @@ func main() {
 	fmt.Printf("PUT resp: %+v\n", putResp)
 
 	// GET
-	getResp, err := client.Get(ctx, &mqpb.GetRequest{
+	getResp, err := client.Get(ctx, &mq_grpc_api.GetRequest{
 		Queue:       "DEV.QUEUE.1",
 		WaitMs:      5000,
 		MaxMsgBytes: 65536,
