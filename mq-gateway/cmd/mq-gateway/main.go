@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/logging"
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -17,6 +19,7 @@ import (
 	// 🔁 CHANGE THIS MODULE PREFIX to match your go.mod
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/rest"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
+	"github.com/your/module/internal/logging"
 )
 
 func getenv(key, def string) string {
@@ -27,7 +30,12 @@ func getenv(key, def string) string {
 }
 
 func main() {
-	log.Println("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway")
+
+	logging.Init("mq-gateway")
+
+	slog.Info("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway")
+
+	//log.Println("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway")
 
 	// ------------------------------------------------------------------
 	// 1. Connect to IBM MQ (once)
