@@ -15,8 +15,25 @@ compileProto_go:
 ListDockerContainersWithStatus:
 	docker ps -a
 
-RunDockerCompose_MQClientAndMQHost:
-	cd MqClientAndMqHost && docker compose up -d
+Start_DockerCompose_MQClientAndMQHost:
+	cd mq-gateway && docker compose up -d
 
-StopDockerCompose_MQClientAndMQHost:
+Stop_DockerCompose_MQClientAndMQHost:
 	cd MqClientAndMqHost && docker compose stop
+
+Logs_MQ_Gateway:
+	docker logs -f --tail 100 mq-gateway
+
+Logs_MQ_Host:
+	docker logs -f --tail 100 mq-host
+
+docker_build_with_debug_MQClientAndMQHost:
+	cd MqClientAndMqHost && docker build --no-cache --progress=plain -t mq-gateway-debug .
+
+docker_list_all_containers:
+	docker ps -a
+
+docker_list_running_containers:
+#	docker ps
+	docker ps -a --filter "status=running"
+

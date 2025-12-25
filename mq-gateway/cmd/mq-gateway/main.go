@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/logging"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -19,7 +18,6 @@ import (
 	// 🔁 CHANGE THIS MODULE PREFIX to match your go.mod
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/rest"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
-	"github.com/your/module/internal/logging"
 )
 
 func getenv(key, def string) string {
@@ -33,7 +31,11 @@ func main() {
 
 	logging.Init("mq-gateway")
 
-	slog.Info("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway")
+	slog.Info("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway",
+		"id", "b21007ef-2195-45f2-bc4e-6f53b8dc7017")
+
+	slog.Info("[main] Exiting github.com/jlambert68/MQDockerContainer2/mq-gateway",
+		"id", "37500e51-aced-4cd1-9fd1-26f19c297982")
 
 	//log.Println("[main] starting github.com/jlambert68/MQDockerContainer2/mq-gateway")
 
@@ -42,10 +44,14 @@ func main() {
 	// ------------------------------------------------------------------
 	gateway, err := mqcore.NewGateway()
 	if err != nil {
-		log.Fatalf("[main] failed to connect to MQ: %v", err)
+		slog.Error("[main] failed to connect to MQ: %v", err,
+			"id", "74a80c22-5b70-43f9-b651-a9334d22d29d")
+		os.Exit(1)
 	}
 	defer gateway.Close()
-	log.Println("[main] connected to MQ")
+
+	slog.Info("[main] connected to MQ",
+		"id", "d0a80fb4-71f5-4214-9b31-605a38ea5c97")
 
 	// ------------------------------------------------------------------
 	// 2. REST server
@@ -64,9 +70,11 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("[REST] listening on %s\n", restPort)
+		slog.Info("[REST] listening on %s\n", restPort)
 		if err := restServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("[REST] server error: %v", err)
+			slog.Error("[REST] server error: %v", err,
+				"id", "954b394f-07c4-47bd-afc6-790b60e66a8a")
+			os.Exit(1)
 		}
 	}()
 
@@ -77,7 +85,9 @@ func main() {
 
 	lis, err := net.Listen("tcp", grpcPort)
 	if err != nil {
-		log.Fatalf("[gRPC] failed to listen: %v", err)
+		slog.Error("[gRPC] failed to listen: %v", err,
+			"id", "a6e161a3-fc09-4b97-96ae-ae0b0bcfce3b")
+		os.Exit(1)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -86,9 +96,11 @@ func main() {
 	})
 
 	go func() {
-		log.Printf("[gRPC] listening on %s\n", grpcPort)
+		slog.Info("[gRPC] listening on %s\n", grpcPort)
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("[gRPC] server error: %v", err)
+			slog.Error("[gRPC] server error: %v", err,
+				"id", "0b7852fd-e166-436c-95e4-29d17082294f")
+			os.Exit(1)
 		}
 	}()
 
@@ -99,7 +111,7 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
 	sig := <-sigCh
-	log.Printf("[main] received signal %s, shutting down", sig)
+	slog.Info("[main] received signal %s, shutting down", sig)
 
 	// Stop gRPC
 	grpcServer.GracefulStop()
@@ -108,8 +120,11 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := restServer.Shutdown(ctx); err != nil {
-		log.Printf("[REST] shutdown error: %v", err)
+		slog.Error("[REST] shutdown error: %v", err,
+			"id", "040462a5-fff7-4b5a-b0f0-a9d740337349")
+		os.Exit(1)
 	}
 
-	log.Println("[main] github.com/jlambert68/MQDockerContainer2/mq-gateway stopped cleanly")
+	slog.Info("[main] github.com/jlambert68/MQDockerContainer2/mq-gateway stopped cleanly",
+		"id", "4356edef-60e2-42f0-afab-924ffe08008f")
 }
