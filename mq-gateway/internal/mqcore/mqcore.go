@@ -2,7 +2,7 @@ package mqcore
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
@@ -54,12 +54,14 @@ func NewGateway() (*Gateway, error) {
 		cno.SecurityParms = csp
 	}
 
-	log.Printf("[mqcore] Connecting to MQ qmgr=%s at %s over channel=%s\n", qMgrName, connName, channel)
+	slog.Info("[mqcore] Connecting to MQ qmgr=%s at %s over channel=%s\n", qMgrName, connName, channel,
+		"id", "6d63fb38-b7b3-44ae-96de-81787257d3aa")
 	qMgr, err := ibmmq.Connx(qMgrName, cno)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("[mqcore] Connected to queue manager", qMgrName)
+	slog.Info("[mqcore] Connected to queue manager", qMgrName,
+		"id", "bbbbe2e7-43b8-4163-8bd4-68ff6a8aba06")
 
 	return &Gateway{QMgr: qMgr}, nil
 }

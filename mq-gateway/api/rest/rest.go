@@ -3,7 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -48,7 +48,9 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	err := h.GW.Put(req.Queue, req.Message)
 	resp := PutResponse{Status: "ok"}
 	if err != nil {
-		log.Printf("[REST] Put error: %v", err)
+		slog.Error("[REST] Put error: %v", err,
+			"id", "73c893e6-e2f2-4e1b-a85f-e1422649436d")
+
 		resp.Status = "error"
 		resp.Error = err.Error()
 		w.WriteHeader(http.StatusBadGateway)
@@ -71,7 +73,9 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	msg, empty, err := h.GW.Get(req.Queue, req.WaitMs, req.MaxMsgBytes)
 	resp := GetResponse{Status: "ok", Message: msg, Empty: empty}
 	if err != nil {
-		log.Printf("[REST] Get error: %v", err)
+		slog.Error("[REST] Get error: %v", err,
+			"id", "793094b5-ddcf-497c-9772-dbf9d1df9867")
+
 		resp.Status = "error"
 		resp.Error = err.Error()
 		w.WriteHeader(http.StatusBadGateway)

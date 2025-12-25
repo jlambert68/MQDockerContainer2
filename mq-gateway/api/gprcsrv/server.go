@@ -2,7 +2,7 @@ package grpcsrv
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
@@ -23,7 +23,8 @@ func (s *Server) Put(ctx context.Context, req *mq_grpc_api.PutRequest) (*mq_grpc
 
 	err := s.GW.Put(req.GetQueue(), req.GetMessage())
 	if err != nil {
-		log.Printf("[gRPC] Put error: %v", err)
+		slog.Error("[gRPC] Put error: %v", err,
+			"id", "52985a11-d814-403e-a00b-5cdeb2784025")
 		return &mq_grpc_api.PutResponse{
 			Status: "error",
 			Error:  err.Error(),
@@ -43,7 +44,8 @@ func (s *Server) Get(ctx context.Context, req *mq_grpc_api.GetRequest) (*mq_grpc
 
 	msg, empty, err := s.GW.Get(req.GetQueue(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
 	if err != nil {
-		log.Printf("[gRPC] Get error: %v", err)
+		slog.Error("[gRPC] Get error: %v", err,
+			"id", "1b7707de-cf17-4080-922c-450362159d29")
 		return &mq_grpc_api.GetResponse{
 			Status: "error",
 			Error:  err.Error(),
