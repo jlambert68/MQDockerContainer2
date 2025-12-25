@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/logging"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
+
 	"log/slog"
 	"net"
 	"net/http"
@@ -17,7 +19,6 @@ import (
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 	// 🔁 CHANGE THIS MODULE PREFIX to match your go.mod
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/rest"
-	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
 )
 
 func getenv(key, def string) string {
