@@ -22,7 +22,7 @@ func getenv(key, def string) string {
 func NewGateway() (*Gateway, error) {
 	qMgrName := getenv("MQ_QMGR", "QM1")
 	channel := getenv("MQ_CHANNEL", "DEV.APP.SVRCONN")
-	host := getenv("MQ_HOST", "mq")
+	host := getenv("MQ_HOST", "mq-local_host")
 	port := getenv("MQ_PORT", "1414")
 	user := getenv("MQ_USER", "app")
 	password := getenv("MQ_PASSWORD", "passw0rd")
@@ -54,13 +54,20 @@ func NewGateway() (*Gateway, error) {
 		cno.SecurityParms = csp
 	}
 
-	slog.Info("[mqcore] Connecting to MQ qmgr=%s at %s over channel=%s\n", qMgrName, connName, channel,
+	slog.Info(fmt.Sprintf("[mqcore] Connecting to MQ qmgr=%s at %s over channel=%s", qMgrName, connName, channel),
+		"csp.AuthenticationType ", ibmmq.MQCSP_AUTH_USER_ID_AND_PWD,
+		"csp.UserId", user,
+		"csp.Password", password,
+		"cno.SecurityParms", cno.SecurityParms,
 		"id", "6d63fb38-b7b3-44ae-96de-81787257d3aa")
+
 	qMgr, err := ibmmq.Connx(qMgrName, cno)
+
 	if err != nil {
 		return nil, err
 	}
-	slog.Info("[mqcore] Connected to queue manager", qMgrName,
+	slog.Info("[mqcore] Connected to queue manager",
+		"QueueManager", qMgrName,
 		"id", "bbbbe2e7-43b8-4163-8bd4-68ff6a8aba06")
 
 	return &Gateway{QMgr: qMgr}, nil

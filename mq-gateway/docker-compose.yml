@@ -13,13 +13,13 @@ services:
   mq-gateway:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_debug
     container_name: mq-gateway
     depends_on:
       - mq
     environment:
       MQ_QMGR: "QM1"
-      MQ_HOST: "mq-local"
+      MQ_HOST: "mq-local_host"
       MQ_PORT: "1414"
       MQ_CHANNEL: "DEV.APP.SVRCONN"
       MQ_USER: "app"
@@ -28,8 +28,11 @@ services:
       GRPC_PORT: ":9090"
       MQ_SSLCIPH: ""
       MQ_KEY_REPOSITORY: ""
+      MQ_INSTALLATION_PATH: /opt/mqm
+      LD_LIBRARY_PATH: /opt/mqm/lib64
     ports:
-      - "8080:8080"
-      - "9090:9090"
+      - "8080:8080" # Rest
+      - "9090:9090" # gRPC
+      - "2345:2345"   # delve
 
 
