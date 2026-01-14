@@ -6,6 +6,17 @@ services:
       LICENSE: accept
       MQ_QMGR_NAME: QM1
       MQ_APP_PASSWORD: passw0rd
+
+      # Tell the QM where its key repository is (basename, no .kdb)
+      #MQSSLKEYR: /etc/mqm/pki/qm/key
+      MQSSLKEYR: /etc/mqm/pki/client/key
+      MQSSLCIPH: TLS_RSA_WITH_AES_256_CBC_SHA256
+
+
+    volumes:
+      - ./pki/qm:/etc/mqm/pki/qm:ro
+      - ./mqsc:/etc/mqm/mqsc:ro
+
     ports:
       - "1414:1414"
       - "9443:9443"
@@ -13,7 +24,7 @@ services:
   mq-gateway:
     build:
       context: .
-      dockerfile: Dockerfile_debug
+      dockerfile: Dockerfile.debug.mq-sdk.local.dockerfile
     container_name: mq-gateway
     depends_on:
       - mq
@@ -24,15 +35,23 @@ services:
       MQ_CHANNEL: "DEV.APP.SVRCONN"
       MQ_USER: "app"
       MQ_PASSWORD: "passw0rd"
+
       REST_PORT: ":8080"
       GRPC_PORT: ":9090"
-      MQ_SSLCIPH: ""
-      MQ_KEY_REPOSITORY: ""
+
+      # TLS (client)
+      MQSSLCIPH: TLS_RSA_WITH_AES_256_CBC_SHA256
+      MQSSLKEYR: /etc/mqm/pki/client/key
+
+
       MQ_INSTALLATION_PATH: /opt/mqm
       LD_LIBRARY_PATH: /opt/mqm/lib64
+
+    volumes:
+      - ./pki/client:/etc/mqm/pki/client:ro
+
     ports:
       - "8080:8080" # Rest
       - "9090:9090" # gRPC
       - "2345:2345"   # delve
-
 
