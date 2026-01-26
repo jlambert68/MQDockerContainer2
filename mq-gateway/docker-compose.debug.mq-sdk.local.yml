@@ -9,17 +9,24 @@ services:
 
       # Tell the QM where its key repository is (basename, no .kdb)
       #MQSSLKEYR: /etc/mqm/pki/qm/key
-      MQSSLKEYR: /etc/mqm/pki/client/key
+      MQSSLKEYR: /etc/mqm/pki/qm/key
       MQSSLCIPH: TLS_RSA_WITH_AES_256_CBC_SHA256
 
 
     volumes:
+      - mqdata:/mnt/mqm
       - ./pki/qm:/etc/mqm/pki/qm:ro
-      - ./mqsc:/etc/mqm/mqsc:ro
+#      - ./mqsc:/etc/mqm/mqsc:ro
+#     TLS ON
+#      - ./mqsc/tls:/etc/mqm/mqsc:ro
+#     TLS OFF
+      - ./mqsc/plain:/etc/mqm/mqsc:ro
+
 
     ports:
       - "1414:1414"
       - "9443:9443"
+
 
   mq-gateway:
     build:
@@ -32,26 +39,33 @@ services:
       MQ_QMGR: "QM1"
       MQ_HOST: "mq-local_host"
       MQ_PORT: "1414"
-      MQ_CHANNEL: "DEV.APP.SVRCONN"
       MQ_USER: "app"
       MQ_PASSWORD: "passw0rd"
 
+#     TLS ON
+#      MQ_TLS_ENABLED: "true"
+#      MQ_CHANNEL: "DEV.TLS.SVRCONN"
+#     TLS OFF
+      MQ_TLS_ENABLED: "false"
+      MQ_CHANNEL: "DEV.APP.SVRCONN"
+
+      # TLS (client) - for your Go code
+      MQ_SSLCIPH: TLS_RSA_WITH_AES_256_CBC_SHA256
+      MQ_KEY_REPOSITORY: /etc/mqm/pki/client/key
+
       REST_PORT: ":8080"
       GRPC_PORT: ":9090"
-
-      # TLS (client)
-      MQSSLCIPH: TLS_RSA_WITH_AES_256_CBC_SHA256
-      MQSSLKEYR: /etc/mqm/pki/client/key
-
 
       MQ_INSTALLATION_PATH: /opt/mqm
       LD_LIBRARY_PATH: /opt/mqm/lib64
 
     volumes:
-      - ./pki/client:/etc/mqm/pki/client:ro
+      - ./pki/client:/etc/mqm/pki/client:rw
 
     ports:
       - "8080:8080" # Rest
       - "9090:9090" # gRPC
       - "2345:2345"   # delve
 
+volumes:
+  mqdata:

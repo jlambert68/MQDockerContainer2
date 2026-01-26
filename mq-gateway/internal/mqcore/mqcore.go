@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
@@ -19,9 +20,26 @@ func getenv(key, def string) string {
 	return def
 }
 
+func getbool(key string, def bool) bool {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "yes", "y", "on":
+		return true
+	case "0", "false", "no", "n", "off":
+		return false
+	default:
+		return def
+	}
+}
+
 func NewGateway() (*Gateway, error) {
+	tlsEnabled := getbool("MQ_TLS_ENABLED", false)
 	qMgrName := getenv("MQ_QMGR", "QM1")
-	channel := getenv("MQ_CHANNEL", "DEV.APP.SVRCONN")
+	channel := getenv("MQ_CHANNEL", "DEV.TLS.SVRCONN") //"DEV.APP.SVRCONN")
 	host := getenv("MQ_HOST", "mq-local_host")
 	port := getenv("MQ_PORT", "1414")
 	user := getenv("MQ_USER", "app")
@@ -34,13 +52,19 @@ func NewGateway() (*Gateway, error) {
 	cd := ibmmq.NewMQCD()
 	cd.ChannelName = channel
 	cd.ConnectionName = connName
-	cd.SSLCipherSpec = sslCipherSpec
 
 	cno := ibmmq.NewMQCNO()
 	cno.Options = ibmmq.MQCNO_CLIENT_BINDING
 	cno.ClientConn = cd
 
-	if sslCipherSpec != "" && sslKeyRepo != "" {
+	if tlsEnabled {
+		// Fail fast if misconfigured
+		if sslCipherSpec == "" || sslKeyRepo == "" {
+			return nil, fmt.Errorf("TLS enabled but MQ_SSLCIPH or MQ_KEY_REPOSITORY is missing")
+		}
+
+		cd.SSLCipherSpec = sslCipherSpec
+
 		sco := ibmmq.NewMQSCO()
 		sco.KeyRepository = sslKeyRepo
 		cno.SSLConfig = sco
