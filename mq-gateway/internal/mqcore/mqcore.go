@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
@@ -94,11 +95,135 @@ func NewGateway() (*Gateway, error) {
 		"QueueManager", qMgrName,
 		"id", "bbbbe2e7-43b8-4163-8bd4-68ff6a8aba06")
 
+	if tlsEnabled {
+		logTLSStatus(qMgr, channel)
+	}
+
 	return &Gateway{QMgr: qMgr}, nil
 }
 
 func (g *Gateway) Close() {
 	_ = g.QMgr.Disc()
+}
+
+func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
+	const (
+		qCommandName = "SYSTEM.ADMIN.COMMAND.QUEUE"
+		qReplyName   = "SYSTEM.DEFAULT.MODEL.QUEUE"
+	)
+
+	// Open command queue.
+	odCmd := ibmmq.NewMQOD()
+	odCmd.ObjectType = ibmmq.MQOT_Q
+	odCmd.ObjectName = qCommandName
+	cmdQ, err := qMgr.Open(odCmd, ibmmq.MQOO_OUTPUT)
+	if err != nil {
+		slog.Warn("[mqcore] TLS status unavailable (open command queue failed)", "error", err)
+		return
+	}
+	defer cmdQ.Close(0)
+
+	// Open reply queue (model).
+	odReply := ibmmq.NewMQOD()
+	odReply.ObjectType = ibmmq.MQOT_Q
+	odReply.ObjectName = qReplyName
+	replyQ, err := qMgr.Open(odReply, ibmmq.MQOO_INPUT_EXCLUSIVE)
+	if err != nil {
+		slog.Warn("[mqcore] TLS status unavailable (open reply queue failed)", "error", err)
+		return
+	}
+	defer replyQ.Close(0)
+
+	putMQMD := ibmmq.NewMQMD()
+	pmo := ibmmq.NewMQPMO()
+	pmo.Options = ibmmq.MQPMO_NO_SYNCPOINT | ibmmq.MQPMO_NEW_MSG_ID | ibmmq.MQPMO_NEW_CORREL_ID | ibmmq.MQPMO_FAIL_IF_QUIESCING
+	putMQMD.Format = "MQADMIN"
+	putMQMD.ReplyToQ = replyQ.Name
+	putMQMD.MsgType = ibmmq.MQMT_REQUEST
+	putMQMD.Report = ibmmq.MQRO_PASS_DISCARD_AND_EXPIRY
+
+	cfh := ibmmq.NewMQCFH()
+	cfh.Version = ibmmq.MQCFH_VERSION_3
+	cfh.Type = ibmmq.MQCFT_COMMAND_XR
+	cfh.Command = ibmmq.MQCMD_INQUIRE_CHANNEL_STATUS
+
+	buf := make([]byte, 0)
+	pcfparm := new(ibmmq.PCFParameter)
+	pcfparm.Type = ibmmq.MQCFT_STRING
+	pcfparm.Parameter = ibmmq.MQCACH_CHANNEL_NAME
+	pcfparm.String = []string{channel}
+	cfh.ParameterCount++
+	buf = append(buf, pcfparm.Bytes()...)
+	buf = append(cfh.Bytes(), buf...)
+
+	if err := cmdQ.Put(putMQMD, pmo, buf); err != nil {
+		slog.Warn("[mqcore] TLS status unavailable (PCF put failed)", "error", err)
+		return
+	}
+
+	var sslCipherSpec string
+	var sslCipherSuite string
+	var sslPeer string
+	var gotResponse bool
+
+	getMQMD := ibmmq.NewMQMD()
+	gmo := ibmmq.NewMQGMO()
+	gmo.Options = ibmmq.MQGMO_NO_SYNCPOINT | ibmmq.MQGMO_CONVERT | ibmmq.MQGMO_WAIT
+	gmo.WaitInterval = int32((3 * time.Second) / time.Millisecond)
+
+	for {
+		buffer := make([]byte, 0, 10*1024)
+		var datalen int
+		buffer, datalen, err = replyQ.GetSlice(getMQMD, gmo, buffer)
+		if err != nil {
+			if mqret, ok := err.(*ibmmq.MQReturn); ok && mqret.MQRC == ibmmq.MQRC_NO_MSG_AVAILABLE {
+				break
+			}
+			slog.Warn("[mqcore] TLS status unavailable (PCF get failed)", "error", err)
+			return
+		}
+
+		cfh, offset := ibmmq.ReadPCFHeader(buffer)
+		if cfh.Reason != ibmmq.MQRC_NONE {
+			slog.Warn("[mqcore] TLS status unavailable (PCF response error)", "reason", cfh.Reason)
+			return
+		}
+		gotResponse = true
+
+		for offset < datalen {
+			pcfParm, bytesRead := ibmmq.ReadPCFParameter(buffer[offset:])
+			switch pcfParm.Parameter {
+			case ibmmq.MQCACH_SSL_CIPHER_SPEC:
+				if pcfParm.Type == ibmmq.MQCFT_STRING && len(pcfParm.String) > 0 {
+					sslCipherSpec = strings.TrimSpace(pcfParm.String[0])
+				}
+			case ibmmq.MQCACH_SSL_CIPHER_SUITE:
+				if pcfParm.Type == ibmmq.MQCFT_STRING && len(pcfParm.String) > 0 {
+					sslCipherSuite = strings.TrimSpace(pcfParm.String[0])
+				}
+			case ibmmq.MQCACH_SSL_PEER_NAME:
+				if pcfParm.Type == ibmmq.MQCFT_STRING && len(pcfParm.String) > 0 {
+					sslPeer = strings.TrimSpace(pcfParm.String[0])
+				}
+			}
+			offset += bytesRead
+		}
+
+		if cfh.Control == ibmmq.MQCFC_LAST {
+			break
+		}
+	}
+
+	if !gotResponse {
+		slog.Warn("[mqcore] TLS status unavailable (no PCF response)")
+		return
+	}
+
+	slog.Info("[mqcore] TLS negotiated",
+		"Channel", channel,
+		"SSLCIPH", sslCipherSpec,
+		"SSLCIPH_SUITE", sslCipherSuite,
+		"SSLPEER", sslPeer)
 }
 
 // Put sends a message to the given queue.

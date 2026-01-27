@@ -18,9 +18,11 @@ services:
       - ./pki/qm:/etc/mqm/pki/qm:ro
 #      - ./mqsc:/etc/mqm/mqsc:ro
 #     TLS ON
-#      - ./mqsc/tls:/etc/mqm/mqsc:ro
+      - ./mqsc/tls/90-sslkeyr.mqsc:/etc/mqm/90-sslkeyr.mqsc:ro
+      - ./mqsc/tls/10-auth.mqsc:/etc/mqm/10-auth.mqsc:ro
+      - ./mqsc/tls/99-tls-channel.mqsc:/etc/mqm/99-tls-channel.mqsc:ro
 #     TLS OFF
-      - ./mqsc/plain:/etc/mqm/mqsc:ro
+#      - ./mqsc/plain:/etc/mqm/mqsc:ro
 
 
     ports:
@@ -43,11 +45,11 @@ services:
       MQ_PASSWORD: "passw0rd"
 
 #     TLS ON
-#      MQ_TLS_ENABLED: "true"
-#      MQ_CHANNEL: "DEV.TLS.SVRCONN"
+      MQ_TLS_ENABLED: "true"
+      MQ_CHANNEL: "DEV.TLS.SVRCONN"
 #     TLS OFF
-      MQ_TLS_ENABLED: "false"
-      MQ_CHANNEL: "DEV.APP.SVRCONN"
+#      MQ_TLS_ENABLED: "false"
+#      MQ_CHANNEL: "DEV.APP.SVRCONN"
 
       # TLS (client) - for your Go code
       MQ_SSLCIPH: TLS_RSA_WITH_AES_256_CBC_SHA256
@@ -57,10 +59,10 @@ services:
       GRPC_PORT: ":9090"
 
       MQ_INSTALLATION_PATH: /opt/mqm
-      LD_LIBRARY_PATH: /opt/mqm/lib64
+      LD_LIBRARY_PATH: /opt/mqm/lib64:/opt/mqm/gskit8/lib64
 
     volumes:
-      - ./pki/client:/etc/mqm/pki/client:rw
+      - ./pki-local/client:/etc/mqm/pki/client:ro
 
     ports:
       - "8080:8080" # Rest
