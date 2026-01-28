@@ -14,6 +14,7 @@ type Server struct {
 }
 
 func (s *Server) Put(ctx context.Context, req *mq_grpc_api.PutRequest) (*mq_grpc_api.PutResponse, error) {
+	// Validate request early to keep MQ errors clean.
 	if req.GetQueue() == "" {
 		return &mq_grpc_api.PutResponse{
 			Status: "error",
@@ -35,6 +36,7 @@ func (s *Server) Put(ctx context.Context, req *mq_grpc_api.PutRequest) (*mq_grpc
 }
 
 func (s *Server) Get(ctx context.Context, req *mq_grpc_api.GetRequest) (*mq_grpc_api.GetResponse, error) {
+	// Validate request early to keep MQ errors clean.
 	if req.GetQueue() == "" {
 		return &mq_grpc_api.GetResponse{
 			Status: "error",
@@ -60,6 +62,7 @@ func (s *Server) Get(ctx context.Context, req *mq_grpc_api.GetRequest) (*mq_grpc
 }
 
 func (s *Server) BrowseFirst(ctx context.Context, req *mq_grpc_api.BrowseFirstRequest) (*mq_grpc_api.BrowseResponse, error) {
+	// BrowseFirst opens a server-side browse cursor.
 	if req.GetQueue() == "" {
 		return &mq_grpc_api.BrowseResponse{
 			Status: "error",
@@ -86,6 +89,7 @@ func (s *Server) BrowseFirst(ctx context.Context, req *mq_grpc_api.BrowseFirstRe
 }
 
 func (s *Server) BrowseNext(ctx context.Context, req *mq_grpc_api.BrowseNextRequest) (*mq_grpc_api.BrowseResponse, error) {
+	// BrowseNext continues an existing browse cursor.
 	if req.GetBrowseId() == "" {
 		return &mq_grpc_api.BrowseResponse{
 			Status: "error",
@@ -112,6 +116,7 @@ func (s *Server) BrowseNext(ctx context.Context, req *mq_grpc_api.BrowseNextRequ
 }
 
 func (s *Server) InquireQueue(ctx context.Context, req *mq_grpc_api.InquireQueueRequest) (*mq_grpc_api.InquireQueueResponse, error) {
+	// InquireQueue returns a subset of queue attributes.
 	if req.GetQueue() == "" {
 		return &mq_grpc_api.InquireQueueResponse{
 			Status: "error",

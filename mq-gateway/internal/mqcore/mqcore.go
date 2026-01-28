@@ -14,9 +14,12 @@ import (
 )
 
 type Gateway struct {
-	QMgr             ibmmq.MQQueueManager
-	browseMu         sync.Mutex
-	browseSessions   map[string]*browseSession
+	QMgr ibmmq.MQQueueManager
+	// browseMu protects browseSessions and browse cursor state.
+	browseMu sync.Mutex
+	// browseSessions holds active browse cursors keyed by browse_id.
+	browseSessions map[string]*browseSession
+	// browseSessionTTL limits how long an idle browse cursor can stay open.
 	browseSessionTTL time.Duration
 }
 
@@ -44,6 +47,7 @@ func getbool(key string, def bool) bool {
 }
 
 func NewGateway() (*Gateway, error) {
+	// Read connection settings from environment variables.
 	tlsEnabled := getbool("MQ_TLS_ENABLED", false)
 	qMgrName := getenv("MQ_QMGR", "QM1")
 	channel := getenv("MQ_CHANNEL", "DEV.TLS.SVRCONN") //"DEV.APP.SVRCONN")
@@ -65,6 +69,7 @@ func NewGateway() (*Gateway, error) {
 	cno.ClientConn = cd
 
 	if tlsEnabled {
+		// Fail fast if TLS is requested but configuration is incomplete.
 		// Fail fast if misconfigured
 		if sslCipherSpec == "" || sslKeyRepo == "" {
 			return nil, fmt.Errorf("TLS enabled but MQ_SSLCIPH or MQ_KEY_REPOSITORY is missing")
@@ -78,6 +83,7 @@ func NewGateway() (*Gateway, error) {
 	}
 
 	if user != "" {
+		// Enable user/password authentication when provided.
 		csp := ibmmq.NewMQCSP()
 		csp.AuthenticationType = ibmmq.MQCSP_AUTH_USER_ID_AND_PWD
 		csp.UserId = user
@@ -102,6 +108,7 @@ func NewGateway() (*Gateway, error) {
 		"id", "bbbbe2e7-43b8-4163-8bd4-68ff6a8aba06")
 
 	if tlsEnabled {
+		// Best-effort TLS status logging via PCF.
 		logTLSStatus(qMgr, channel)
 	}
 
@@ -113,6 +120,7 @@ func NewGateway() (*Gateway, error) {
 }
 
 func (g *Gateway) Close() {
+	// Close any browse cursors before disconnecting the QMgr.
 	g.browseMu.Lock()
 	for _, sess := range g.browseSessions {
 		_ = sess.qObj.Close(0)
@@ -123,10 +131,13 @@ func (g *Gateway) Close() {
 }
 
 type browseSession struct {
-	qObj     ibmmq.MQObject
+	// qObj is the open queue handle used for browsing.
+	qObj ibmmq.MQObject
+	// lastUsed tracks idle time for cleanup.
 	lastUsed time.Time
 }
 
+// QueueInfo represents a stable subset of queue attributes we expose.
 type QueueInfo struct {
 	Name            string
 	Description     string
@@ -147,7 +158,7 @@ func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
 		qReplyName   = "SYSTEM.DEFAULT.MODEL.QUEUE"
 	)
 
-	// Open command queue.
+	// Open command queue for PCF requests.
 	odCmd := ibmmq.NewMQOD()
 	odCmd.ObjectType = ibmmq.MQOT_Q
 	odCmd.ObjectName = qCommandName
@@ -158,7 +169,7 @@ func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
 	}
 	defer cmdQ.Close(0)
 
-	// Open reply queue (model).
+	// Open reply queue (model) for PCF responses.
 	odReply := ibmmq.NewMQOD()
 	odReply.ObjectType = ibmmq.MQOT_Q
 	odReply.ObjectName = qReplyName
@@ -218,6 +229,7 @@ func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
 			return
 		}
 
+		// Decode PCF header to check response reason/control.
 		cfh, offset := ibmmq.ReadPCFHeader(buffer)
 		if cfh.Reason != ibmmq.MQRC_NONE {
 			slog.Warn("[mqcore] TLS status unavailable (PCF response error)", "reason", cfh.Reason)
@@ -263,6 +275,7 @@ func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
 
 // Put sends a message to the given queue.
 func (g *Gateway) Put(queueName, message string) error {
+	// Put writes a single message to the queue (non-transactional).
 	od := ibmmq.NewMQOD()
 	od.ObjectType = ibmmq.MQOT_Q
 	od.ObjectName = queueName
@@ -285,6 +298,7 @@ func (g *Gateway) Put(queueName, message string) error {
 
 // Get receives a message from the given queue.
 func (g *Gateway) Get(queueName string, waitMs int, maxBytes int) (string, bool, error) {
+	// Get consumes one message from the queue.
 	if maxBytes <= 0 {
 		maxBytes = 64 * 1024
 	}
@@ -304,9 +318,11 @@ func (g *Gateway) Get(queueName string, waitMs int, maxBytes int) (string, bool,
 	gmo.Options = ibmmq.MQGMO_FAIL_IF_QUIESCING | ibmmq.MQGMO_CONVERT
 
 	if waitMs > 0 {
+		// Wait for up to waitMs.
 		gmo.Options |= ibmmq.MQGMO_WAIT
 		gmo.WaitInterval = int32(waitMs)
 	} else {
+		// Return immediately if no message is available.
 		gmo.Options |= ibmmq.MQGMO_NO_WAIT
 	}
 
@@ -322,6 +338,7 @@ func (g *Gateway) Get(queueName string, waitMs int, maxBytes int) (string, bool,
 }
 
 func (g *Gateway) InquireQueue(queueName string) (*QueueInfo, error) {
+	// InquireQueue returns attributes for the specified queue.
 	if queueName == "" {
 		return nil, fmt.Errorf("queue required")
 	}
@@ -336,6 +353,7 @@ func (g *Gateway) InquireQueue(queueName string) (*QueueInfo, error) {
 	}
 	defer qObj.Close(0)
 
+	// Selectors define which attributes to return.
 	selectors := []int32{
 		ibmmq.MQCA_Q_NAME,
 		ibmmq.MQCA_Q_DESC,
@@ -355,6 +373,7 @@ func (g *Gateway) InquireQueue(queueName string) (*QueueInfo, error) {
 		return nil, fmt.Errorf("MQINQ: %w", err)
 	}
 
+	// Map raw selector results into a typed struct.
 	info := &QueueInfo{
 		Name:            stringAttr(attrs, ibmmq.MQCA_Q_NAME),
 		Description:     stringAttr(attrs, ibmmq.MQCA_Q_DESC),
@@ -373,6 +392,7 @@ func (g *Gateway) InquireQueue(queueName string) (*QueueInfo, error) {
 }
 
 func intAttr(attrs map[int32]interface{}, key int32) int32 {
+	// intAttr safely reads integer selector values.
 	v, ok := attrs[key]
 	if !ok {
 		return 0
@@ -390,6 +410,7 @@ func intAttr(attrs map[int32]interface{}, key int32) int32 {
 }
 
 func stringAttr(attrs map[int32]interface{}, key int32) string {
+	// stringAttr safely reads string selector values.
 	v, ok := attrs[key]
 	if !ok {
 		return ""
@@ -405,10 +426,12 @@ func stringAttr(attrs map[int32]interface{}, key int32) string {
 }
 
 func (g *Gateway) BrowseFirst(queueName string, waitMs int, maxBytes int) (string, bool, string, error) {
+	// BrowseFirst opens a browse cursor and returns the first message.
 	if maxBytes <= 0 {
 		maxBytes = 64 * 1024
 	}
 
+	// Evict idle browse cursors before creating a new one.
 	g.cleanupBrowseSessions()
 
 	od := ibmmq.NewMQOD()
@@ -425,9 +448,11 @@ func (g *Gateway) BrowseFirst(queueName string, waitMs int, maxBytes int) (strin
 	gmo.Options = ibmmq.MQGMO_FAIL_IF_QUIESCING | ibmmq.MQGMO_BROWSE_FIRST | ibmmq.MQGMO_CONVERT
 
 	if waitMs > 0 {
+		// Wait for up to waitMs.
 		gmo.Options |= ibmmq.MQGMO_WAIT
 		gmo.WaitInterval = int32(waitMs)
 	} else {
+		// Return immediately if no message is available.
 		gmo.Options |= ibmmq.MQGMO_NO_WAIT
 	}
 
@@ -447,6 +472,7 @@ func (g *Gateway) BrowseFirst(queueName string, waitMs int, maxBytes int) (strin
 		return "", false, "", fmt.Errorf("browse id: %w", err)
 	}
 
+	// Store the browse cursor for subsequent BrowseNext calls.
 	g.browseMu.Lock()
 	g.browseSessions[browseID] = &browseSession{
 		qObj:     qObj,
@@ -458,6 +484,7 @@ func (g *Gateway) BrowseFirst(queueName string, waitMs int, maxBytes int) (strin
 }
 
 func (g *Gateway) BrowseNext(browseID string, waitMs int, maxBytes int) (string, bool, error) {
+	// BrowseNext continues an existing browse cursor.
 	if browseID == "" {
 		return "", false, fmt.Errorf("browse_id required")
 	}
@@ -475,9 +502,11 @@ func (g *Gateway) BrowseNext(browseID string, waitMs int, maxBytes int) (string,
 	gmo.Options = ibmmq.MQGMO_FAIL_IF_QUIESCING | ibmmq.MQGMO_BROWSE_NEXT | ibmmq.MQGMO_CONVERT
 
 	if waitMs > 0 {
+		// Wait for up to waitMs.
 		gmo.Options |= ibmmq.MQGMO_WAIT
 		gmo.WaitInterval = int32(waitMs)
 	} else {
+		// Return immediately if no message is available.
 		gmo.Options |= ibmmq.MQGMO_NO_WAIT
 	}
 
@@ -490,12 +519,14 @@ func (g *Gateway) BrowseNext(browseID string, waitMs int, maxBytes int) (string,
 		return "", false, fmt.Errorf("MQGET(BROWSE_NEXT): %w", err)
 	}
 
+	// Refresh idle timer after successful browse.
 	g.touchBrowseSession(browseID)
 
 	return string(buf[:msgLen]), false, nil
 }
 
 func newBrowseID() (string, error) {
+	// Generate a random token for the browse session.
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
@@ -504,6 +535,7 @@ func newBrowseID() (string, error) {
 }
 
 func (g *Gateway) getBrowseSession(browseID string) (*browseSession, error) {
+	// Drop expired sessions before lookup.
 	g.cleanupBrowseSessions()
 
 	g.browseMu.Lock()
@@ -512,11 +544,13 @@ func (g *Gateway) getBrowseSession(browseID string) (*browseSession, error) {
 	if sess == nil {
 		return nil, fmt.Errorf("browse_id not found or expired")
 	}
+	// Touch on read to extend the session lifetime.
 	sess.lastUsed = time.Now()
 	return sess, nil
 }
 
 func (g *Gateway) touchBrowseSession(browseID string) {
+	// Touch without returning the session.
 	g.browseMu.Lock()
 	if sess := g.browseSessions[browseID]; sess != nil {
 		sess.lastUsed = time.Now()
@@ -525,6 +559,7 @@ func (g *Gateway) touchBrowseSession(browseID string) {
 }
 
 func (g *Gateway) cleanupBrowseSessions() {
+	// Close and remove sessions idle beyond browseSessionTTL.
 	g.browseMu.Lock()
 	defer g.browseMu.Unlock()
 	now := time.Now()

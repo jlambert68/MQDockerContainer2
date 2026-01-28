@@ -8,7 +8,9 @@ import (
 )
 
 type PutRequest struct {
-	Queue   string `json:"queue"`
+	// Target queue name.
+	Queue string `json:"queue"`
+	// Payload to put.
 	Message string `json:"message"`
 }
 
@@ -18,9 +20,12 @@ type PutResponse struct {
 }
 
 type GetRequest struct {
-	Queue       string `json:"queue"`
-	WaitMs      int    `json:"wait_ms"`
-	MaxMsgBytes int    `json:"max_msg_bytes"`
+	// Target queue name.
+	Queue string `json:"queue"`
+	// Wait interval in milliseconds.
+	WaitMs int `json:"wait_ms"`
+	// Max message size in bytes.
+	MaxMsgBytes int `json:"max_msg_bytes"`
 }
 
 type GetResponse struct {
@@ -31,31 +36,40 @@ type GetResponse struct {
 }
 
 type BrowseFirstRequest struct {
-	Queue       string `json:"queue"`
-	WaitMs      int    `json:"wait_ms"`
-	MaxMsgBytes int    `json:"max_msg_bytes"`
+	// Target queue name.
+	Queue string `json:"queue"`
+	// Wait interval in milliseconds.
+	WaitMs int `json:"wait_ms"`
+	// Max message size in bytes.
+	MaxMsgBytes int `json:"max_msg_bytes"`
 }
 
 type BrowseNextRequest struct {
-	BrowseID    string `json:"browse_id"`
-	WaitMs      int    `json:"wait_ms"`
-	MaxMsgBytes int    `json:"max_msg_bytes"`
+	// Browse session token returned from /browse/first.
+	BrowseID string `json:"browse_id"`
+	// Wait interval in milliseconds.
+	WaitMs int `json:"wait_ms"`
+	// Max message size in bytes.
+	MaxMsgBytes int `json:"max_msg_bytes"`
 }
 
 type BrowseResponse struct {
-	Status   string `json:"status"`
-	Message  string `json:"message,omitempty"`
-	Empty    bool   `json:"empty"`
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
+	Empty   bool   `json:"empty"`
+	// BrowseID is only set for BrowseFirst responses.
 	BrowseID string `json:"browse_id,omitempty"`
 	Error    string `json:"error,omitempty"`
 }
 
 type InquireQueueRequest struct {
+	// Target queue name.
 	Queue string `json:"queue"`
 }
 
 type InquireQueueResponse struct {
-	Status          string `json:"status"`
+	Status string `json:"status"`
+	// Queue is the resolved queue name (may be normalized by MQ).
 	Queue           string `json:"queue"`
 	QueueDesc       string `json:"queue_desc"`
 	QueueType       int32  `json:"queue_type"`
@@ -71,10 +85,12 @@ type InquireQueueResponse struct {
 }
 
 type Handler struct {
+	// GW provides access to MQ operations.
 	GW *mqcore.Gateway
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
+	// Decode and validate the request.
 	var req PutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -100,6 +116,7 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	// Decode and validate the request.
 	var req GetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -125,6 +142,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) BrowseFirst(w http.ResponseWriter, r *http.Request) {
+	// Decode and validate the request.
 	var req BrowseFirstRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -149,6 +167,7 @@ func (h *Handler) BrowseFirst(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) BrowseNext(w http.ResponseWriter, r *http.Request) {
+	// Decode and validate the request.
 	var req BrowseNextRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -173,6 +192,7 @@ func (h *Handler) BrowseNext(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) InquireQueue(w http.ResponseWriter, r *http.Request) {
+	// Decode and validate the request.
 	var req InquireQueueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
@@ -210,6 +230,7 @@ func (h *Handler) InquireQueue(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Routes() http.Handler {
+	// Register REST endpoints.
 	mux := http.NewServeMux()
 	mux.HandleFunc("/put", h.Put)
 	mux.HandleFunc("/get", h.Get)
