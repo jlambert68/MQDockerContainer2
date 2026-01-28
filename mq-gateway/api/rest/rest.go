@@ -2,9 +2,10 @@ package rest
 
 import (
 	"encoding/json"
-	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
 	"log/slog"
 	"net/http"
+
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/pkg/mqcore"
 )
 
 type PutRequest struct {
@@ -86,7 +87,7 @@ type InquireQueueResponse struct {
 
 type Handler struct {
 	// GW provides access to MQ operations.
-	GW *mqcore.Gateway
+	GW mqcore.Gateway
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {

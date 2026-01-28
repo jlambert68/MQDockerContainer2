@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/logging"
-	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/pkg/mqcore"
 
 	"log/slog"
 	"net"

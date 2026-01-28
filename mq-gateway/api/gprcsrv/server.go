@@ -5,12 +5,12 @@ import (
 	"log/slog"
 
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
-	"github.com/jlambert68/MQDockerContainer2/mq-gateway/internal/mqcore"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/pkg/mqcore"
 )
 
 type Server struct {
 	mq_grpc_api.UnimplementedMqGrpcServicesServer
-	GW *mqcore.Gateway
+	GW mqcore.Gateway
 }
 
 func (s *Server) Put(ctx context.Context, req *mq_grpc_api.PutRequest) (*mq_grpc_api.PutResponse, error) {
