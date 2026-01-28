@@ -1,17 +1,23 @@
 package mqcore
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ibm-messaging/mq-golang/v5/ibmmq"
 )
 
 type Gateway struct {
-	QMgr ibmmq.MQQueueManager
+	QMgr             ibmmq.MQQueueManager
+	browseMu         sync.Mutex
+	browseSessions   map[string]*browseSession
+	browseSessionTTL time.Duration
 }
 
 func getenv(key, def string) string {
@@ -99,11 +105,26 @@ func NewGateway() (*Gateway, error) {
 		logTLSStatus(qMgr, channel)
 	}
 
-	return &Gateway{QMgr: qMgr}, nil
+	return &Gateway{
+		QMgr:             qMgr,
+		browseSessions:   make(map[string]*browseSession),
+		browseSessionTTL: 5 * time.Minute,
+	}, nil
 }
 
 func (g *Gateway) Close() {
+	g.browseMu.Lock()
+	for _, sess := range g.browseSessions {
+		_ = sess.qObj.Close(0)
+	}
+	g.browseSessions = make(map[string]*browseSession)
+	g.browseMu.Unlock()
 	_ = g.QMgr.Disc()
+}
+
+type browseSession struct {
+	qObj     ibmmq.MQObject
+	lastUsed time.Time
 }
 
 func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
@@ -284,4 +305,136 @@ func (g *Gateway) Get(queueName string, waitMs int, maxBytes int) (string, bool,
 		return "", false, fmt.Errorf("MQGET: %w", err)
 	}
 	return string(buf[:msgLen]), false, nil
+}
+
+func (g *Gateway) BrowseFirst(queueName string, waitMs int, maxBytes int) (string, bool, string, error) {
+	if maxBytes <= 0 {
+		maxBytes = 64 * 1024
+	}
+
+	g.cleanupBrowseSessions()
+
+	od := ibmmq.NewMQOD()
+	od.ObjectType = ibmmq.MQOT_Q
+	od.ObjectName = queueName
+
+	qObj, err := g.QMgr.Open(od, ibmmq.MQOO_BROWSE)
+	if err != nil {
+		return "", false, "", fmt.Errorf("MQOPEN: %w", err)
+	}
+
+	md := ibmmq.NewMQMD()
+	gmo := ibmmq.NewMQGMO()
+	gmo.Options = ibmmq.MQGMO_FAIL_IF_QUIESCING | ibmmq.MQGMO_BROWSE_FIRST | ibmmq.MQGMO_CONVERT
+
+	if waitMs > 0 {
+		gmo.Options |= ibmmq.MQGMO_WAIT
+		gmo.WaitInterval = int32(waitMs)
+	} else {
+		gmo.Options |= ibmmq.MQGMO_NO_WAIT
+	}
+
+	buf := make([]byte, maxBytes)
+	msgLen, err := qObj.Get(md, gmo, buf)
+	if err != nil {
+		_ = qObj.Close(0)
+		if mqret, ok := err.(*ibmmq.MQReturn); ok && mqret.MQRC == ibmmq.MQRC_NO_MSG_AVAILABLE {
+			return "", true, "", nil
+		}
+		return "", false, "", fmt.Errorf("MQGET(BROWSE_FIRST): %w", err)
+	}
+
+	browseID, err := newBrowseID()
+	if err != nil {
+		_ = qObj.Close(0)
+		return "", false, "", fmt.Errorf("browse id: %w", err)
+	}
+
+	g.browseMu.Lock()
+	g.browseSessions[browseID] = &browseSession{
+		qObj:     qObj,
+		lastUsed: time.Now(),
+	}
+	g.browseMu.Unlock()
+
+	return string(buf[:msgLen]), false, browseID, nil
+}
+
+func (g *Gateway) BrowseNext(browseID string, waitMs int, maxBytes int) (string, bool, error) {
+	if browseID == "" {
+		return "", false, fmt.Errorf("browse_id required")
+	}
+	if maxBytes <= 0 {
+		maxBytes = 64 * 1024
+	}
+
+	sess, err := g.getBrowseSession(browseID)
+	if err != nil {
+		return "", false, err
+	}
+
+	md := ibmmq.NewMQMD()
+	gmo := ibmmq.NewMQGMO()
+	gmo.Options = ibmmq.MQGMO_FAIL_IF_QUIESCING | ibmmq.MQGMO_BROWSE_NEXT | ibmmq.MQGMO_CONVERT
+
+	if waitMs > 0 {
+		gmo.Options |= ibmmq.MQGMO_WAIT
+		gmo.WaitInterval = int32(waitMs)
+	} else {
+		gmo.Options |= ibmmq.MQGMO_NO_WAIT
+	}
+
+	buf := make([]byte, maxBytes)
+	msgLen, err := sess.qObj.Get(md, gmo, buf)
+	if err != nil {
+		if mqret, ok := err.(*ibmmq.MQReturn); ok && mqret.MQRC == ibmmq.MQRC_NO_MSG_AVAILABLE {
+			return "", true, nil
+		}
+		return "", false, fmt.Errorf("MQGET(BROWSE_NEXT): %w", err)
+	}
+
+	g.touchBrowseSession(browseID)
+
+	return string(buf[:msgLen]), false, nil
+}
+
+func newBrowseID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func (g *Gateway) getBrowseSession(browseID string) (*browseSession, error) {
+	g.cleanupBrowseSessions()
+
+	g.browseMu.Lock()
+	defer g.browseMu.Unlock()
+	sess := g.browseSessions[browseID]
+	if sess == nil {
+		return nil, fmt.Errorf("browse_id not found or expired")
+	}
+	sess.lastUsed = time.Now()
+	return sess, nil
+}
+
+func (g *Gateway) touchBrowseSession(browseID string) {
+	g.browseMu.Lock()
+	if sess := g.browseSessions[browseID]; sess != nil {
+		sess.lastUsed = time.Now()
+	}
+	g.browseMu.Unlock()
+}
+
+func (g *Gateway) cleanupBrowseSessions() {
+	g.browseMu.Lock()
+	defer g.browseMu.Unlock()
+	now := time.Now()
+	for id, sess := range g.browseSessions {
+		if now.Sub(sess.lastUsed) > g.browseSessionTTL {
+			_ = sess.qObj.Close(0)
+			delete(g.browseSessions, id)
+		}
+	}
 }

@@ -58,3 +58,55 @@ func (s *Server) Get(ctx context.Context, req *mq_grpc_api.GetRequest) (*mq_grpc
 		Empty:   empty,
 	}, nil
 }
+
+func (s *Server) BrowseFirst(ctx context.Context, req *mq_grpc_api.BrowseFirstRequest) (*mq_grpc_api.BrowseResponse, error) {
+	if req.GetQueue() == "" {
+		return &mq_grpc_api.BrowseResponse{
+			Status: "error",
+			Error:  "queue required",
+		}, nil
+	}
+
+	msg, empty, browseID, err := s.GW.BrowseFirst(req.GetQueue(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
+	if err != nil {
+		slog.Error("[gRPC] BrowseFirst error: %v", err,
+			"id", "0f17a466-8c6f-4f50-b7fb-7de77c8943b0")
+		return &mq_grpc_api.BrowseResponse{
+			Status: "error",
+			Error:  err.Error(),
+		}, nil
+	}
+
+	return &mq_grpc_api.BrowseResponse{
+		Status:   "ok",
+		Message:  msg,
+		Empty:    empty,
+		BrowseId: browseID,
+	}, nil
+}
+
+func (s *Server) BrowseNext(ctx context.Context, req *mq_grpc_api.BrowseNextRequest) (*mq_grpc_api.BrowseResponse, error) {
+	if req.GetBrowseId() == "" {
+		return &mq_grpc_api.BrowseResponse{
+			Status: "error",
+			Error:  "browse_id required",
+		}, nil
+	}
+
+	msg, empty, err := s.GW.BrowseNext(req.GetBrowseId(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
+	if err != nil {
+		slog.Error("[gRPC] BrowseNext error: %v", err,
+			"id", "6d0aa16a-5bb5-4ec9-9a1b-d4099af02bb5")
+		return &mq_grpc_api.BrowseResponse{
+			Status: "error",
+			Error:  err.Error(),
+		}, nil
+	}
+
+	return &mq_grpc_api.BrowseResponse{
+		Status:   "ok",
+		Message:  msg,
+		Empty:    empty,
+		BrowseId: req.GetBrowseId(),
+	}, nil
+}

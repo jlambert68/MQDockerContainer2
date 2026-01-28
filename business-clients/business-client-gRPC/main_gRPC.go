@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 	"log"
 	"os"
 	"time"
+
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 
 	"google.golang.org/grpc"
 	//"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
@@ -33,7 +34,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// PUT
+	// PUT 1
 	putResp, err := client.Put(ctx, &mq_grpc_api.PutRequest{
 		Queue:   "DEV.QUEUE.1",
 		Message: "Hello via gRPC!",
@@ -42,6 +43,40 @@ func main() {
 		log.Fatal("Put:", err)
 	}
 	fmt.Printf("PUT resp: %+v\n", putResp)
+
+	// PUT 2
+	putResp2, err := client.Put(ctx, &mq_grpc_api.PutRequest{
+		Queue:   "DEV.QUEUE.1",
+		Message: "Hello 2 via gRPC!",
+	})
+	if err != nil {
+		log.Fatal("Put:", err)
+	}
+	fmt.Printf("PUT resp: %+v\n", putResp2)
+
+	// BROWSE FIRST
+	browseFirstResp, err := client.BrowseFirst(ctx, &mq_grpc_api.BrowseFirstRequest{
+		Queue:       "DEV.QUEUE.1",
+		WaitMs:      1000,
+		MaxMsgBytes: 65536,
+	})
+	if err != nil {
+		log.Fatal("BrowseFirst:", err)
+	}
+	fmt.Printf("BROWSE FIRST resp: %+v\n", browseFirstResp)
+
+	// BROWSE NEXT
+	if browseFirstResp.GetBrowseId() != "" {
+		browseNextResp, err := client.BrowseNext(ctx, &mq_grpc_api.BrowseNextRequest{
+			BrowseId:    browseFirstResp.GetBrowseId(),
+			WaitMs:      1000,
+			MaxMsgBytes: 65536,
+		})
+		if err != nil {
+			log.Fatal("BrowseNext:", err)
+		}
+		fmt.Printf("BROWSE NEXT resp: %+v\n", browseNextResp)
+	}
 
 	// GET
 	getResp, err := client.Get(ctx, &mq_grpc_api.GetRequest{
@@ -53,4 +88,16 @@ func main() {
 		log.Fatal("Get:", err)
 	}
 	fmt.Printf("GET resp: %+v\n", getResp)
+
+	// GET
+	getResp2, err := client.Get(ctx, &mq_grpc_api.GetRequest{
+		Queue:       "DEV.QUEUE.1",
+		WaitMs:      5000,
+		MaxMsgBytes: 65536,
+	})
+	if err != nil {
+		log.Fatal("Get:", err)
+	}
+	fmt.Printf("GET resp: %+v\n", getResp2)
+
 }
