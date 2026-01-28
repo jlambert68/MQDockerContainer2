@@ -104,7 +104,8 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	err := h.GW.Put(req.Queue, req.Message)
 	resp := PutResponse{Status: "ok"}
 	if err != nil {
-		slog.Error("[REST] Put error: %v", err,
+		slog.Error("[REST] Put error",
+			"error", err,
 			"id", "73c893e6-e2f2-4e1b-a85f-e1422649436d")
 
 		resp.Status = "error"
@@ -130,7 +131,8 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	msg, empty, err := h.GW.Get(req.Queue, req.WaitMs, req.MaxMsgBytes)
 	resp := GetResponse{Status: "ok", Message: msg, Empty: empty}
 	if err != nil {
-		slog.Error("[REST] Get error: %v", err,
+		slog.Error("[REST] Get error",
+			"error", err,
 			"id", "793094b5-ddcf-497c-9772-dbf9d1df9867")
 
 		resp.Status = "error"
@@ -156,7 +158,8 @@ func (h *Handler) BrowseFirst(w http.ResponseWriter, r *http.Request) {
 	msg, empty, browseID, err := h.GW.BrowseFirst(req.Queue, req.WaitMs, req.MaxMsgBytes)
 	resp := BrowseResponse{Status: "ok", Message: msg, Empty: empty, BrowseID: browseID}
 	if err != nil {
-		slog.Error("[REST] BrowseFirst error: %v", err,
+		slog.Error("[REST] BrowseFirst error",
+			"error", err,
 			"id", "3a0a4b6d-292b-4db3-8a83-a2d9b804db9e")
 		resp.Status = "error"
 		resp.Error = err.Error()
@@ -181,7 +184,8 @@ func (h *Handler) BrowseNext(w http.ResponseWriter, r *http.Request) {
 	msg, empty, err := h.GW.BrowseNext(req.BrowseID, req.WaitMs, req.MaxMsgBytes)
 	resp := BrowseResponse{Status: "ok", Message: msg, Empty: empty, BrowseID: req.BrowseID}
 	if err != nil {
-		slog.Error("[REST] BrowseNext error: %v", err,
+		slog.Error("[REST] BrowseNext error",
+			"error", err,
 			"id", "b52be2e8-30e4-43f2-aa5d-b1f7f117d7a3")
 		resp.Status = "error"
 		resp.Error = err.Error()
@@ -206,7 +210,8 @@ func (h *Handler) InquireQueue(w http.ResponseWriter, r *http.Request) {
 	info, err := h.GW.InquireQueue(req.Queue)
 	resp := InquireQueueResponse{Status: "ok"}
 	if err != nil {
-		slog.Error("[REST] InquireQueue error: %v", err,
+		slog.Error("[REST] InquireQueue error",
+			"error", err,
 			"id", "dd21d12e-b129-4244-bb8b-08a6bb6eea3c")
 		resp.Status = "error"
 		resp.Error = err.Error()

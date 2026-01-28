@@ -24,7 +24,8 @@ func (s *Server) Put(ctx context.Context, req *mq_grpc_api.PutRequest) (*mq_grpc
 
 	err := s.GW.Put(req.GetQueue(), req.GetMessage())
 	if err != nil {
-		slog.Error("[gRPC] Put error: %v", err,
+		slog.Error("[gRPC] Put error",
+			"error", err,
 			"id", "52985a11-d814-403e-a00b-5cdeb2784025")
 		return &mq_grpc_api.PutResponse{
 			Status: "error",
@@ -46,7 +47,8 @@ func (s *Server) Get(ctx context.Context, req *mq_grpc_api.GetRequest) (*mq_grpc
 
 	msg, empty, err := s.GW.Get(req.GetQueue(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
 	if err != nil {
-		slog.Error("[gRPC] Get error: %v", err,
+		slog.Error("[gRPC] Get error",
+			"error", err,
 			"id", "1b7707de-cf17-4080-922c-450362159d29")
 		return &mq_grpc_api.GetResponse{
 			Status: "error",
@@ -72,7 +74,8 @@ func (s *Server) BrowseFirst(ctx context.Context, req *mq_grpc_api.BrowseFirstRe
 
 	msg, empty, browseID, err := s.GW.BrowseFirst(req.GetQueue(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
 	if err != nil {
-		slog.Error("[gRPC] BrowseFirst error: %v", err,
+		slog.Error("[gRPC] BrowseFirst error",
+			"error", err,
 			"id", "0f17a466-8c6f-4f50-b7fb-7de77c8943b0")
 		return &mq_grpc_api.BrowseResponse{
 			Status: "error",
@@ -99,7 +102,8 @@ func (s *Server) BrowseNext(ctx context.Context, req *mq_grpc_api.BrowseNextRequ
 
 	msg, empty, err := s.GW.BrowseNext(req.GetBrowseId(), int(req.GetWaitMs()), int(req.GetMaxMsgBytes()))
 	if err != nil {
-		slog.Error("[gRPC] BrowseNext error: %v", err,
+		slog.Error("[gRPC] BrowseNext error",
+			"error", err,
 			"id", "6d0aa16a-5bb5-4ec9-9a1b-d4099af02bb5")
 		return &mq_grpc_api.BrowseResponse{
 			Status: "error",
@@ -126,7 +130,8 @@ func (s *Server) InquireQueue(ctx context.Context, req *mq_grpc_api.InquireQueue
 
 	info, err := s.GW.InquireQueue(req.GetQueue())
 	if err != nil {
-		slog.Error("[gRPC] InquireQueue error: %v", err,
+		slog.Error("[gRPC] InquireQueue error",
+			"error", err,
 			"id", "f5d27a47-3a67-46ca-9cfe-f5a7c12ee2f5")
 		return &mq_grpc_api.InquireQueueResponse{
 			Status: "error",

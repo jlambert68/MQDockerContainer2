@@ -49,8 +49,8 @@ func main() {
 	// ------------------------------------------------------------------
 	gateway, err := mqcore.NewGateway()
 	if err != nil {
-		slog.Error(fmt.Sprintf("[main] failed to connect to MQ:"),
-			"Error", err,
+		slog.Error("[main] failed to connect to MQ",
+			"error", err,
 			"id", "74a80c22-5b70-43f9-b651-a9334d22d29d")
 		os.Exit(1)
 	}
@@ -78,7 +78,8 @@ func main() {
 	go func() {
 		slog.Info(fmt.Sprintf("[REST] listening on %s", restPort))
 		if err := restServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("[REST] server error: %v", err,
+			slog.Error("[REST] server error",
+				"error", err,
 				"id", "954b394f-07c4-47bd-afc6-790b60e66a8a")
 			os.Exit(1)
 		}
@@ -92,8 +93,8 @@ func main() {
 
 	lis, err := net.Listen("tcp", grpcPort)
 	if err != nil {
-		slog.Error("[gRPC] failed to listen, ",
-			"Error", err,
+		slog.Error("[gRPC] failed to listen",
+			"error", err,
 			"id", "a6e161a3-fc09-4b97-96ae-ae0b0bcfce3b")
 
 		os.Exit(1)
@@ -114,8 +115,8 @@ func main() {
 			"id", "262a76a1-536d-4775-bac8-f3dc457919df",
 		)
 		if err := grpcServer.Serve(lis); err != nil {
-			slog.Error("[gRPC] server error: ",
-				"Error", err,
+			slog.Error("[gRPC] server error",
+				"error", err,
 				"id", "0b7852fd-e166-436c-95e4-29d17082294f")
 			os.Exit(1)
 		}
@@ -137,8 +138,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := restServer.Shutdown(ctx); err != nil {
-		slog.Error("[REST] shutdown error:",
-			"Error", err,
+		slog.Error("[REST] shutdown error",
+			"error", err,
 			"id", "040462a5-fff7-4b5a-b0f0-a9d740337349")
 		os.Exit(1)
 	}

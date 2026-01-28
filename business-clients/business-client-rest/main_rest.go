@@ -10,7 +10,9 @@ import (
 )
 
 type PutRequest struct {
-	Queue   string `json:"queue"`
+	// Target queue name.
+	Queue string `json:"queue"`
+	// Payload to put.
 	Message string `json:"message"`
 }
 type PutResponse struct {
@@ -18,9 +20,12 @@ type PutResponse struct {
 	Error  string `json:"error"`
 }
 type GetRequest struct {
-	Queue       string `json:"queue"`
-	WaitMs      int    `json:"wait_ms"`
-	MaxMsgBytes int    `json:"max_msg_bytes"`
+	// Target queue name.
+	Queue string `json:"queue"`
+	// Wait interval in milliseconds.
+	WaitMs int `json:"wait_ms"`
+	// Max message size in bytes.
+	MaxMsgBytes int `json:"max_msg_bytes"`
 }
 type GetResponse struct {
 	Status  string `json:"status"`
@@ -29,27 +34,36 @@ type GetResponse struct {
 	Error   string `json:"error"`
 }
 type BrowseFirstRequest struct {
-	Queue       string `json:"queue"`
-	WaitMs      int    `json:"wait_ms"`
-	MaxMsgBytes int    `json:"max_msg_bytes"`
+	// Target queue name.
+	Queue string `json:"queue"`
+	// Wait interval in milliseconds.
+	WaitMs int `json:"wait_ms"`
+	// Max message size in bytes.
+	MaxMsgBytes int `json:"max_msg_bytes"`
 }
 type BrowseNextRequest struct {
-	BrowseID    string `json:"browse_id"`
-	WaitMs      int    `json:"wait_ms"`
-	MaxMsgBytes int    `json:"max_msg_bytes"`
+	// Browse session token returned by /browse/first.
+	BrowseID string `json:"browse_id"`
+	// Wait interval in milliseconds.
+	WaitMs int `json:"wait_ms"`
+	// Max message size in bytes.
+	MaxMsgBytes int `json:"max_msg_bytes"`
 }
 type BrowseResponse struct {
-	Status   string `json:"status"`
-	Message  string `json:"message"`
-	Empty    bool   `json:"empty"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Empty   bool   `json:"empty"`
+	// BrowseID is set only for BrowseFirst.
 	BrowseID string `json:"browse_id"`
 	Error    string `json:"error"`
 }
 type InquireQueueRequest struct {
+	// Target queue name.
 	Queue string `json:"queue"`
 }
 type InquireQueueResponse struct {
-	Status          string `json:"status"`
+	Status string `json:"status"`
+	// Queue is the resolved queue name (may be normalized by MQ).
 	Queue           string `json:"queue"`
 	QueueDesc       string `json:"queue_desc"`
 	QueueType       int32  `json:"queue_type"`
@@ -72,9 +86,10 @@ func getenv(k, d string) string {
 }
 
 func main() {
+	// Base URL for the REST gateway.
 	base := getenv("MQ_GATEWAY_URL", "http://localhost:8080")
 
-	// PUT
+	// PUT - add a message to the queue.
 	p := PutRequest{Queue: "DEV.QUEUE.1", Message: "Hello via REST!"}
 	buf, _ := json.Marshal(p)
 	resp, err := http.Post(base+"/put", "application/json", bytes.NewReader(buf))
@@ -86,7 +101,7 @@ func main() {
 	_ = json.NewDecoder(resp.Body).Decode(&pres)
 	fmt.Printf("PUT resp: %+v\n", pres)
 
-	// GET
+	// GET - destructive read from the queue.
 	g := GetRequest{Queue: "DEV.QUEUE.1", WaitMs: 5000, MaxMsgBytes: 65536}
 	buf, _ = json.Marshal(g)
 	resp, err = http.Post(base+"/get", "application/json", bytes.NewReader(buf))
@@ -98,7 +113,7 @@ func main() {
 	_ = json.NewDecoder(resp.Body).Decode(&gres)
 	fmt.Printf("GET resp: %+v\n", gres)
 
-	// BROWSE FIRST
+	// BROWSE FIRST - non-destructive peek and start browse cursor.
 	bf := BrowseFirstRequest{Queue: "DEV.QUEUE.1", WaitMs: 1000, MaxMsgBytes: 65536}
 	buf, _ = json.Marshal(bf)
 	resp, err = http.Post(base+"/browse/first", "application/json", bytes.NewReader(buf))
@@ -110,7 +125,7 @@ func main() {
 	_ = json.NewDecoder(resp.Body).Decode(&bres)
 	fmt.Printf("BROWSE FIRST resp: %+v\n", bres)
 
-	// BROWSE NEXT
+	// BROWSE NEXT - continue the browse cursor.
 	if bres.BrowseID != "" {
 		bn := BrowseNextRequest{BrowseID: bres.BrowseID, WaitMs: 1000, MaxMsgBytes: 65536}
 		buf, _ = json.Marshal(bn)
@@ -124,7 +139,7 @@ func main() {
 		fmt.Printf("BROWSE NEXT resp: %+v\n", bnres)
 	}
 
-	// INQUIRE QUEUE
+	// INQUIRE QUEUE - fetch queue attributes.
 	iq := InquireQueueRequest{Queue: "DEV.QUEUE.1"}
 	buf, _ = json.Marshal(iq)
 	resp, err = http.Post(base+"/inquire/queue", "application/json", bytes.NewReader(buf))
