@@ -1,0 +1,35 @@
+services:
+  mq:
+    image: icr.io/ibm-messaging/mq:9.3.2.0-r2
+    container_name: mq-local_host
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_APP_PASSWORD: passw0rd
+    ports:
+      - "1414:1414"
+      - "9443:9443"
+
+  mq-gateway:
+    build:
+      context: ../mq-gateway
+      dockerfile: Dockerfile.debug.mq-sdk.local.dockerfile
+    container_name: mq-gateway
+    depends_on:
+      - mq
+    environment:
+      MQ_QMGR: "QM1"
+      MQ_HOST: "mq-local_host"
+      MQ_PORT: "1414"
+      MQ_USER: "app"
+      MQ_PASSWORD: "passw0rd"
+      MQ_TLS_ENABLED: "false"
+      MQ_CHANNEL: "DEV.APP.SVRCONN"
+      REST_PORT: ":8080"
+      GRPC_PORT: ":9090"
+      MQ_INSTALLATION_PATH: /opt/mqm
+      LD_LIBRARY_PATH: /opt/mqm/lib64:/opt/mqm/gskit8/lib64
+    ports:
+      - "8080:8080" # REST
+      - "9090:9090" # gRPC
+      - "2345:2345" # delve
