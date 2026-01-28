@@ -13,6 +13,8 @@ service MqGrpcServices {
   }
   rpc BrowseNext (BrowseNextRequest) returns (BrowseResponse){
   }
+  rpc InquireQueue (InquireQueueRequest) returns (InquireQueueResponse){
+  }
 }
 
 message PutRequest {
@@ -56,4 +58,24 @@ message BrowseResponse {
   bool   empty     = 3;
   string browse_id = 4;
   string error     = 5;
+}
+
+message InquireQueueRequest {
+  string queue = 1;
+}
+
+message InquireQueueResponse {
+  string status            = 1;
+  string queue             = 2;
+  string queue_desc        = 3;
+  int32  queue_type        = 4;
+  int32  queue_usage       = 5;
+  int32  def_persistence   = 6;
+  int32  inhibit_get       = 7;
+  int32  inhibit_put       = 8;
+  int32  current_q_depth   = 9;
+  int32  max_q_depth       = 10;
+  int32  open_input_count  = 11;
+  int32  open_output_count = 12;
+  string error             = 13;
 }

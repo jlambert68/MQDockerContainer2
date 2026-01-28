@@ -78,6 +78,15 @@ func main() {
 		fmt.Printf("BROWSE NEXT resp: %+v\n", browseNextResp)
 	}
 
+	// INQUIRE QUEUE
+	inquireResp, err := client.InquireQueue(ctx, &mq_grpc_api.InquireQueueRequest{
+		Queue: "DEV.QUEUE.1",
+	})
+	if err != nil {
+		log.Fatal("InquireQueue:", err)
+	}
+	fmt.Printf("INQUIRE QUEUE resp: %+v\n", inquireResp)
+
 	// GET
 	getResp, err := client.Get(ctx, &mq_grpc_api.GetRequest{
 		Queue:       "DEV.QUEUE.1",
@@ -89,6 +98,15 @@ func main() {
 	}
 	fmt.Printf("GET resp: %+v\n", getResp)
 
+	// INQUIRE QUEUE
+	inquireResp2, err := client.InquireQueue(ctx, &mq_grpc_api.InquireQueueRequest{
+		Queue: "DEV.QUEUE.1",
+	})
+	if err != nil {
+		log.Fatal("InquireQueue:", err)
+	}
+	fmt.Printf("INQUIRE QUEUE resp: %+v\n", inquireResp2)
+
 	// GET
 	getResp2, err := client.Get(ctx, &mq_grpc_api.GetRequest{
 		Queue:       "DEV.QUEUE.1",
@@ -99,5 +117,14 @@ func main() {
 		log.Fatal("Get:", err)
 	}
 	fmt.Printf("GET resp: %+v\n", getResp2)
+
+	// INQUIRE QUEUE
+	inquireResp3, err := client.InquireQueue(ctx, &mq_grpc_api.InquireQueueRequest{
+		Queue: "DEV.QUEUE.1",
+	})
+	if err != nil {
+		log.Fatal("InquireQueue:", err)
+	}
+	fmt.Printf("INQUIRE QUEUE resp: %+v\n", inquireResp3)
 
 }

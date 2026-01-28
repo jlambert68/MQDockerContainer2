@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MqGrpcServices_Put_FullMethodName         = "/mqpb.MqGrpcServices/Put"
-	MqGrpcServices_Get_FullMethodName         = "/mqpb.MqGrpcServices/Get"
-	MqGrpcServices_BrowseFirst_FullMethodName = "/mqpb.MqGrpcServices/BrowseFirst"
-	MqGrpcServices_BrowseNext_FullMethodName  = "/mqpb.MqGrpcServices/BrowseNext"
+	MqGrpcServices_Put_FullMethodName          = "/mqpb.MqGrpcServices/Put"
+	MqGrpcServices_Get_FullMethodName          = "/mqpb.MqGrpcServices/Get"
+	MqGrpcServices_BrowseFirst_FullMethodName  = "/mqpb.MqGrpcServices/BrowseFirst"
+	MqGrpcServices_BrowseNext_FullMethodName   = "/mqpb.MqGrpcServices/BrowseNext"
+	MqGrpcServices_InquireQueue_FullMethodName = "/mqpb.MqGrpcServices/InquireQueue"
 )
 
 // MqGrpcServicesClient is the client API for MqGrpcServices service.
@@ -33,6 +34,7 @@ type MqGrpcServicesClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	BrowseFirst(ctx context.Context, in *BrowseFirstRequest, opts ...grpc.CallOption) (*BrowseResponse, error)
 	BrowseNext(ctx context.Context, in *BrowseNextRequest, opts ...grpc.CallOption) (*BrowseResponse, error)
+	InquireQueue(ctx context.Context, in *InquireQueueRequest, opts ...grpc.CallOption) (*InquireQueueResponse, error)
 }
 
 type mqGrpcServicesClient struct {
@@ -83,6 +85,16 @@ func (c *mqGrpcServicesClient) BrowseNext(ctx context.Context, in *BrowseNextReq
 	return out, nil
 }
 
+func (c *mqGrpcServicesClient) InquireQueue(ctx context.Context, in *InquireQueueRequest, opts ...grpc.CallOption) (*InquireQueueResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InquireQueueResponse)
+	err := c.cc.Invoke(ctx, MqGrpcServices_InquireQueue_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MqGrpcServicesServer is the server API for MqGrpcServices service.
 // All implementations must embed UnimplementedMqGrpcServicesServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type MqGrpcServicesServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	BrowseFirst(context.Context, *BrowseFirstRequest) (*BrowseResponse, error)
 	BrowseNext(context.Context, *BrowseNextRequest) (*BrowseResponse, error)
+	InquireQueue(context.Context, *InquireQueueRequest) (*InquireQueueResponse, error)
 	mustEmbedUnimplementedMqGrpcServicesServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedMqGrpcServicesServer) BrowseFirst(context.Context, *BrowseFir
 }
 func (UnimplementedMqGrpcServicesServer) BrowseNext(context.Context, *BrowseNextRequest) (*BrowseResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method BrowseNext not implemented")
+}
+func (UnimplementedMqGrpcServicesServer) InquireQueue(context.Context, *InquireQueueRequest) (*InquireQueueResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method InquireQueue not implemented")
 }
 func (UnimplementedMqGrpcServicesServer) mustEmbedUnimplementedMqGrpcServicesServer() {}
 func (UnimplementedMqGrpcServicesServer) testEmbeddedByValue()                        {}
@@ -206,6 +222,24 @@ func _MqGrpcServices_BrowseNext_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MqGrpcServices_InquireQueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InquireQueueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MqGrpcServicesServer).InquireQueue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MqGrpcServices_InquireQueue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MqGrpcServicesServer).InquireQueue(ctx, req.(*InquireQueueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MqGrpcServices_ServiceDesc is the grpc.ServiceDesc for MqGrpcServices service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var MqGrpcServices_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BrowseNext",
 			Handler:    _MqGrpcServices_BrowseNext_Handler,
+		},
+		{
+			MethodName: "InquireQueue",
+			Handler:    _MqGrpcServices_InquireQueue_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

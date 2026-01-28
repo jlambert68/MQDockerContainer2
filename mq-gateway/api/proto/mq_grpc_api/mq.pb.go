@@ -449,6 +449,190 @@ func (x *BrowseResponse) GetError() string {
 	return ""
 }
 
+type InquireQueueRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Queue         string                 `protobuf:"bytes,1,opt,name=queue,proto3" json:"queue,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InquireQueueRequest) Reset() {
+	*x = InquireQueueRequest{}
+	mi := &file_mq_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InquireQueueRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InquireQueueRequest) ProtoMessage() {}
+
+func (x *InquireQueueRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_mq_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InquireQueueRequest.ProtoReflect.Descriptor instead.
+func (*InquireQueueRequest) Descriptor() ([]byte, []int) {
+	return file_mq_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *InquireQueueRequest) GetQueue() string {
+	if x != nil {
+		return x.Queue
+	}
+	return ""
+}
+
+type InquireQueueResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Status          string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Queue           string                 `protobuf:"bytes,2,opt,name=queue,proto3" json:"queue,omitempty"`
+	QueueDesc       string                 `protobuf:"bytes,3,opt,name=queue_desc,json=queueDesc,proto3" json:"queue_desc,omitempty"`
+	QueueType       int32                  `protobuf:"varint,4,opt,name=queue_type,json=queueType,proto3" json:"queue_type,omitempty"`
+	QueueUsage      int32                  `protobuf:"varint,5,opt,name=queue_usage,json=queueUsage,proto3" json:"queue_usage,omitempty"`
+	DefPersistence  int32                  `protobuf:"varint,6,opt,name=def_persistence,json=defPersistence,proto3" json:"def_persistence,omitempty"`
+	InhibitGet      int32                  `protobuf:"varint,7,opt,name=inhibit_get,json=inhibitGet,proto3" json:"inhibit_get,omitempty"`
+	InhibitPut      int32                  `protobuf:"varint,8,opt,name=inhibit_put,json=inhibitPut,proto3" json:"inhibit_put,omitempty"`
+	CurrentQDepth   int32                  `protobuf:"varint,9,opt,name=current_q_depth,json=currentQDepth,proto3" json:"current_q_depth,omitempty"`
+	MaxQDepth       int32                  `protobuf:"varint,10,opt,name=max_q_depth,json=maxQDepth,proto3" json:"max_q_depth,omitempty"`
+	OpenInputCount  int32                  `protobuf:"varint,11,opt,name=open_input_count,json=openInputCount,proto3" json:"open_input_count,omitempty"`
+	OpenOutputCount int32                  `protobuf:"varint,12,opt,name=open_output_count,json=openOutputCount,proto3" json:"open_output_count,omitempty"`
+	Error           string                 `protobuf:"bytes,13,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *InquireQueueResponse) Reset() {
+	*x = InquireQueueResponse{}
+	mi := &file_mq_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InquireQueueResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InquireQueueResponse) ProtoMessage() {}
+
+func (x *InquireQueueResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_mq_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InquireQueueResponse.ProtoReflect.Descriptor instead.
+func (*InquireQueueResponse) Descriptor() ([]byte, []int) {
+	return file_mq_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *InquireQueueResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *InquireQueueResponse) GetQueue() string {
+	if x != nil {
+		return x.Queue
+	}
+	return ""
+}
+
+func (x *InquireQueueResponse) GetQueueDesc() string {
+	if x != nil {
+		return x.QueueDesc
+	}
+	return ""
+}
+
+func (x *InquireQueueResponse) GetQueueType() int32 {
+	if x != nil {
+		return x.QueueType
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetQueueUsage() int32 {
+	if x != nil {
+		return x.QueueUsage
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetDefPersistence() int32 {
+	if x != nil {
+		return x.DefPersistence
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetInhibitGet() int32 {
+	if x != nil {
+		return x.InhibitGet
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetInhibitPut() int32 {
+	if x != nil {
+		return x.InhibitPut
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetCurrentQDepth() int32 {
+	if x != nil {
+		return x.CurrentQDepth
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetMaxQDepth() int32 {
+	if x != nil {
+		return x.MaxQDepth
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetOpenInputCount() int32 {
+	if x != nil {
+		return x.OpenInputCount
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetOpenOutputCount() int32 {
+	if x != nil {
+		return x.OpenOutputCount
+	}
+	return 0
+}
+
+func (x *InquireQueueResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 var File_mq_proto protoreflect.FileDescriptor
 
 const file_mq_proto_rawDesc = "" +
@@ -484,13 +668,36 @@ const file_mq_proto_rawDesc = "" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x14\n" +
 	"\x05empty\x18\x03 \x01(\bR\x05empty\x12\x1b\n" +
 	"\tbrowse_id\x18\x04 \x01(\tR\bbrowseId\x12\x14\n" +
-	"\x05error\x18\x05 \x01(\tR\x05error2\xec\x01\n" +
+	"\x05error\x18\x05 \x01(\tR\x05error\"+\n" +
+	"\x13InquireQueueRequest\x12\x14\n" +
+	"\x05queue\x18\x01 \x01(\tR\x05queue\"\xc2\x03\n" +
+	"\x14InquireQueueResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x14\n" +
+	"\x05queue\x18\x02 \x01(\tR\x05queue\x12\x1d\n" +
+	"\n" +
+	"queue_desc\x18\x03 \x01(\tR\tqueueDesc\x12\x1d\n" +
+	"\n" +
+	"queue_type\x18\x04 \x01(\x05R\tqueueType\x12\x1f\n" +
+	"\vqueue_usage\x18\x05 \x01(\x05R\n" +
+	"queueUsage\x12'\n" +
+	"\x0fdef_persistence\x18\x06 \x01(\x05R\x0edefPersistence\x12\x1f\n" +
+	"\vinhibit_get\x18\a \x01(\x05R\n" +
+	"inhibitGet\x12\x1f\n" +
+	"\vinhibit_put\x18\b \x01(\x05R\n" +
+	"inhibitPut\x12&\n" +
+	"\x0fcurrent_q_depth\x18\t \x01(\x05R\rcurrentQDepth\x12\x1e\n" +
+	"\vmax_q_depth\x18\n" +
+	" \x01(\x05R\tmaxQDepth\x12(\n" +
+	"\x10open_input_count\x18\v \x01(\x05R\x0eopenInputCount\x12*\n" +
+	"\x11open_output_count\x18\f \x01(\x05R\x0fopenOutputCount\x12\x14\n" +
+	"\x05error\x18\r \x01(\tR\x05error2\xb5\x02\n" +
 	"\x0eMqGrpcServices\x12,\n" +
 	"\x03Put\x12\x10.mqpb.PutRequest\x1a\x11.mqpb.PutResponse\"\x00\x12,\n" +
 	"\x03Get\x12\x10.mqpb.GetRequest\x1a\x11.mqpb.GetResponse\"\x00\x12?\n" +
 	"\vBrowseFirst\x12\x18.mqpb.BrowseFirstRequest\x1a\x14.mqpb.BrowseResponse\"\x00\x12=\n" +
 	"\n" +
-	"BrowseNext\x12\x17.mqpb.BrowseNextRequest\x1a\x14.mqpb.BrowseResponse\"\x00B\x0fZ\r./mq_grpc_apib\x06proto3"
+	"BrowseNext\x12\x17.mqpb.BrowseNextRequest\x1a\x14.mqpb.BrowseResponse\"\x00\x12G\n" +
+	"\fInquireQueue\x12\x19.mqpb.InquireQueueRequest\x1a\x1a.mqpb.InquireQueueResponse\"\x00B\x0fZ\r./mq_grpc_apib\x06proto3"
 
 var (
 	file_mq_proto_rawDescOnce sync.Once
@@ -504,27 +711,31 @@ func file_mq_proto_rawDescGZIP() []byte {
 	return file_mq_proto_rawDescData
 }
 
-var file_mq_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_mq_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_mq_proto_goTypes = []any{
-	(*PutRequest)(nil),         // 0: mqpb.PutRequest
-	(*PutResponse)(nil),        // 1: mqpb.PutResponse
-	(*GetRequest)(nil),         // 2: mqpb.GetRequest
-	(*GetResponse)(nil),        // 3: mqpb.GetResponse
-	(*BrowseFirstRequest)(nil), // 4: mqpb.BrowseFirstRequest
-	(*BrowseNextRequest)(nil),  // 5: mqpb.BrowseNextRequest
-	(*BrowseResponse)(nil),     // 6: mqpb.BrowseResponse
+	(*PutRequest)(nil),           // 0: mqpb.PutRequest
+	(*PutResponse)(nil),          // 1: mqpb.PutResponse
+	(*GetRequest)(nil),           // 2: mqpb.GetRequest
+	(*GetResponse)(nil),          // 3: mqpb.GetResponse
+	(*BrowseFirstRequest)(nil),   // 4: mqpb.BrowseFirstRequest
+	(*BrowseNextRequest)(nil),    // 5: mqpb.BrowseNextRequest
+	(*BrowseResponse)(nil),       // 6: mqpb.BrowseResponse
+	(*InquireQueueRequest)(nil),  // 7: mqpb.InquireQueueRequest
+	(*InquireQueueResponse)(nil), // 8: mqpb.InquireQueueResponse
 }
 var file_mq_proto_depIdxs = []int32{
 	0, // 0: mqpb.MqGrpcServices.Put:input_type -> mqpb.PutRequest
 	2, // 1: mqpb.MqGrpcServices.Get:input_type -> mqpb.GetRequest
 	4, // 2: mqpb.MqGrpcServices.BrowseFirst:input_type -> mqpb.BrowseFirstRequest
 	5, // 3: mqpb.MqGrpcServices.BrowseNext:input_type -> mqpb.BrowseNextRequest
-	1, // 4: mqpb.MqGrpcServices.Put:output_type -> mqpb.PutResponse
-	3, // 5: mqpb.MqGrpcServices.Get:output_type -> mqpb.GetResponse
-	6, // 6: mqpb.MqGrpcServices.BrowseFirst:output_type -> mqpb.BrowseResponse
-	6, // 7: mqpb.MqGrpcServices.BrowseNext:output_type -> mqpb.BrowseResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	7, // 4: mqpb.MqGrpcServices.InquireQueue:input_type -> mqpb.InquireQueueRequest
+	1, // 5: mqpb.MqGrpcServices.Put:output_type -> mqpb.PutResponse
+	3, // 6: mqpb.MqGrpcServices.Get:output_type -> mqpb.GetResponse
+	6, // 7: mqpb.MqGrpcServices.BrowseFirst:output_type -> mqpb.BrowseResponse
+	6, // 8: mqpb.MqGrpcServices.BrowseNext:output_type -> mqpb.BrowseResponse
+	8, // 9: mqpb.MqGrpcServices.InquireQueue:output_type -> mqpb.InquireQueueResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -541,7 +752,7 @@ func file_mq_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mq_proto_rawDesc), len(file_mq_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

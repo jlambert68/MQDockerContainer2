@@ -110,3 +110,37 @@ func (s *Server) BrowseNext(ctx context.Context, req *mq_grpc_api.BrowseNextRequ
 		BrowseId: req.GetBrowseId(),
 	}, nil
 }
+
+func (s *Server) InquireQueue(ctx context.Context, req *mq_grpc_api.InquireQueueRequest) (*mq_grpc_api.InquireQueueResponse, error) {
+	if req.GetQueue() == "" {
+		return &mq_grpc_api.InquireQueueResponse{
+			Status: "error",
+			Error:  "queue required",
+		}, nil
+	}
+
+	info, err := s.GW.InquireQueue(req.GetQueue())
+	if err != nil {
+		slog.Error("[gRPC] InquireQueue error: %v", err,
+			"id", "f5d27a47-3a67-46ca-9cfe-f5a7c12ee2f5")
+		return &mq_grpc_api.InquireQueueResponse{
+			Status: "error",
+			Error:  err.Error(),
+		}, nil
+	}
+
+	return &mq_grpc_api.InquireQueueResponse{
+		Status:          "ok",
+		Queue:           info.Name,
+		QueueDesc:       info.Description,
+		QueueType:       info.Type,
+		QueueUsage:      info.Usage,
+		DefPersistence:  info.DefPersistence,
+		InhibitGet:      info.InhibitGet,
+		InhibitPut:      info.InhibitPut,
+		CurrentQDepth:   info.CurrentDepth,
+		MaxQDepth:       info.MaxDepth,
+		OpenInputCount:  info.OpenInputCount,
+		OpenOutputCount: info.OpenOutputCount,
+	}, nil
+}

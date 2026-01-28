@@ -45,6 +45,24 @@ type BrowseResponse struct {
 	BrowseID string `json:"browse_id"`
 	Error    string `json:"error"`
 }
+type InquireQueueRequest struct {
+	Queue string `json:"queue"`
+}
+type InquireQueueResponse struct {
+	Status          string `json:"status"`
+	Queue           string `json:"queue"`
+	QueueDesc       string `json:"queue_desc"`
+	QueueType       int32  `json:"queue_type"`
+	QueueUsage      int32  `json:"queue_usage"`
+	DefPersistence  int32  `json:"def_persistence"`
+	InhibitGet      int32  `json:"inhibit_get"`
+	InhibitPut      int32  `json:"inhibit_put"`
+	CurrentQDepth   int32  `json:"current_q_depth"`
+	MaxQDepth       int32  `json:"max_q_depth"`
+	OpenInputCount  int32  `json:"open_input_count"`
+	OpenOutputCount int32  `json:"open_output_count"`
+	Error           string `json:"error"`
+}
 
 func getenv(k, d string) string {
 	if v := os.Getenv(k); v != "" {
@@ -105,4 +123,16 @@ func main() {
 		_ = json.NewDecoder(resp.Body).Decode(&bnres)
 		fmt.Printf("BROWSE NEXT resp: %+v\n", bnres)
 	}
+
+	// INQUIRE QUEUE
+	iq := InquireQueueRequest{Queue: "DEV.QUEUE.1"}
+	buf, _ = json.Marshal(iq)
+	resp, err = http.Post(base+"/inquire/queue", "application/json", bytes.NewReader(buf))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	var iqres InquireQueueResponse
+	_ = json.NewDecoder(resp.Body).Decode(&iqres)
+	fmt.Printf("INQUIRE QUEUE resp: %+v\n", iqres)
 }

@@ -127,6 +127,20 @@ type browseSession struct {
 	lastUsed time.Time
 }
 
+type QueueInfo struct {
+	Name            string
+	Description     string
+	Type            int32
+	Usage           int32
+	DefPersistence  int32
+	InhibitGet      int32
+	InhibitPut      int32
+	CurrentDepth    int32
+	MaxDepth        int32
+	OpenInputCount  int32
+	OpenOutputCount int32
+}
+
 func logTLSStatus(qMgr ibmmq.MQQueueManager, channel string) {
 	const (
 		qCommandName = "SYSTEM.ADMIN.COMMAND.QUEUE"
@@ -305,6 +319,89 @@ func (g *Gateway) Get(queueName string, waitMs int, maxBytes int) (string, bool,
 		return "", false, fmt.Errorf("MQGET: %w", err)
 	}
 	return string(buf[:msgLen]), false, nil
+}
+
+func (g *Gateway) InquireQueue(queueName string) (*QueueInfo, error) {
+	if queueName == "" {
+		return nil, fmt.Errorf("queue required")
+	}
+
+	od := ibmmq.NewMQOD()
+	od.ObjectType = ibmmq.MQOT_Q
+	od.ObjectName = queueName
+
+	qObj, err := g.QMgr.Open(od, ibmmq.MQOO_INQUIRE)
+	if err != nil {
+		return nil, fmt.Errorf("MQOPEN: %w", err)
+	}
+	defer qObj.Close(0)
+
+	selectors := []int32{
+		ibmmq.MQCA_Q_NAME,
+		ibmmq.MQCA_Q_DESC,
+		ibmmq.MQIA_Q_TYPE,
+		ibmmq.MQIA_USAGE,
+		ibmmq.MQIA_DEF_PERSISTENCE,
+		ibmmq.MQIA_INHIBIT_GET,
+		ibmmq.MQIA_INHIBIT_PUT,
+		ibmmq.MQIA_CURRENT_Q_DEPTH,
+		ibmmq.MQIA_MAX_Q_DEPTH,
+		ibmmq.MQIA_OPEN_INPUT_COUNT,
+		ibmmq.MQIA_OPEN_OUTPUT_COUNT,
+	}
+
+	attrs, err := qObj.Inq(selectors)
+	if err != nil {
+		return nil, fmt.Errorf("MQINQ: %w", err)
+	}
+
+	info := &QueueInfo{
+		Name:            stringAttr(attrs, ibmmq.MQCA_Q_NAME),
+		Description:     stringAttr(attrs, ibmmq.MQCA_Q_DESC),
+		Type:            intAttr(attrs, ibmmq.MQIA_Q_TYPE),
+		Usage:           intAttr(attrs, ibmmq.MQIA_USAGE),
+		DefPersistence:  intAttr(attrs, ibmmq.MQIA_DEF_PERSISTENCE),
+		InhibitGet:      intAttr(attrs, ibmmq.MQIA_INHIBIT_GET),
+		InhibitPut:      intAttr(attrs, ibmmq.MQIA_INHIBIT_PUT),
+		CurrentDepth:    intAttr(attrs, ibmmq.MQIA_CURRENT_Q_DEPTH),
+		MaxDepth:        intAttr(attrs, ibmmq.MQIA_MAX_Q_DEPTH),
+		OpenInputCount:  intAttr(attrs, ibmmq.MQIA_OPEN_INPUT_COUNT),
+		OpenOutputCount: intAttr(attrs, ibmmq.MQIA_OPEN_OUTPUT_COUNT),
+	}
+
+	return info, nil
+}
+
+func intAttr(attrs map[int32]interface{}, key int32) int32 {
+	v, ok := attrs[key]
+	if !ok {
+		return 0
+	}
+	switch t := v.(type) {
+	case int32:
+		return t
+	case int:
+		return int32(t)
+	case int64:
+		return int32(t)
+	default:
+		return 0
+	}
+}
+
+func stringAttr(attrs map[int32]interface{}, key int32) string {
+	v, ok := attrs[key]
+	if !ok {
+		return ""
+	}
+	switch t := v.(type) {
+	case string:
+		return t
+	case []byte:
+		return string(t)
+	default:
+		return ""
+	}
 }
 
 func (g *Gateway) BrowseFirst(queueName string, waitMs int, maxBytes int) (string, bool, string, error) {

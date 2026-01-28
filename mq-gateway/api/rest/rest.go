@@ -50,6 +50,26 @@ type BrowseResponse struct {
 	Error    string `json:"error,omitempty"`
 }
 
+type InquireQueueRequest struct {
+	Queue string `json:"queue"`
+}
+
+type InquireQueueResponse struct {
+	Status          string `json:"status"`
+	Queue           string `json:"queue"`
+	QueueDesc       string `json:"queue_desc"`
+	QueueType       int32  `json:"queue_type"`
+	QueueUsage      int32  `json:"queue_usage"`
+	DefPersistence  int32  `json:"def_persistence"`
+	InhibitGet      int32  `json:"inhibit_get"`
+	InhibitPut      int32  `json:"inhibit_put"`
+	CurrentQDepth   int32  `json:"current_q_depth"`
+	MaxQDepth       int32  `json:"max_q_depth"`
+	OpenInputCount  int32  `json:"open_input_count"`
+	OpenOutputCount int32  `json:"open_output_count"`
+	Error           string `json:"error,omitempty"`
+}
+
 type Handler struct {
 	GW *mqcore.Gateway
 }
@@ -152,11 +172,49 @@ func (h *Handler) BrowseNext(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+func (h *Handler) InquireQueue(w http.ResponseWriter, r *http.Request) {
+	var req InquireQueueRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if req.Queue == "" {
+		http.Error(w, "queue required", http.StatusBadRequest)
+		return
+	}
+
+	info, err := h.GW.InquireQueue(req.Queue)
+	resp := InquireQueueResponse{Status: "ok"}
+	if err != nil {
+		slog.Error("[REST] InquireQueue error: %v", err,
+			"id", "dd21d12e-b129-4244-bb8b-08a6bb6eea3c")
+		resp.Status = "error"
+		resp.Error = err.Error()
+		w.WriteHeader(http.StatusBadGateway)
+	} else {
+		resp.Queue = info.Name
+		resp.QueueDesc = info.Description
+		resp.QueueType = info.Type
+		resp.QueueUsage = info.Usage
+		resp.DefPersistence = info.DefPersistence
+		resp.InhibitGet = info.InhibitGet
+		resp.InhibitPut = info.InhibitPut
+		resp.CurrentQDepth = info.CurrentDepth
+		resp.MaxQDepth = info.MaxDepth
+		resp.OpenInputCount = info.OpenInputCount
+		resp.OpenOutputCount = info.OpenOutputCount
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
 func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/put", h.Put)
 	mux.HandleFunc("/get", h.Get)
 	mux.HandleFunc("/browse/first", h.BrowseFirst)
 	mux.HandleFunc("/browse/next", h.BrowseNext)
+	mux.HandleFunc("/inquire/queue", h.InquireQueue)
 	return mux
 }
