@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
-
-	"google.golang.org/grpc"
+	"github.com/jlambert68/MQDockerContainer2/mq-gateway/pkg/mqgrpc"
 	//"github.com/jlambert68/MQDockerContainer2/mq-gateway/api/proto/mq_grpc_api"
 )
 
@@ -23,15 +22,12 @@ func getenv(k, d string) string {
 func main() {
 	addr := getenv("MQ_GRPC_ADDR", "localhost:9090")
 
-	// Connect to the gRPC gateway (plaintext for local dev).
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	// Connect using the wrapper client (plaintext for local dev).
+	client, err := mqgrpc.NewClient(mqgrpc.Config{Address: addr})
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
-	defer conn.Close()
-
-	// Create the typed gRPC client.
-	client := mq_grpc_api.NewMqGrpcServicesClient(conn)
+	defer client.Close()
 
 	// Shared request context with timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
