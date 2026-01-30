@@ -1,9 +1,10 @@
 module github.com/jlambert68/MQDockerContainer2/mq-gateway
 
-go  1.25.5
+go 1.25.5
 
 require (
 	github.com/ibm-messaging/mq-golang/v5 v5.7.0
+	golang.org/x/crypto v0.44.0
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 )
