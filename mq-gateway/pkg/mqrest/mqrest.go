@@ -47,9 +47,13 @@ func NewClient(cfg Config) Client {
 		transport = http.DefaultTransport.(*http.Transport).Clone()
 		transport.TLSClientConfig = cfg.TLSConfig
 	}
+	httpc := &http.Client{Timeout: timeout}
+	if transport != nil {
+		httpc.Transport = transport
+	}
 	return &client{
 		baseURL: base,
-		httpc:   &http.Client{Timeout: timeout, Transport: transport},
+		httpc:   httpc,
 	}
 }
 
