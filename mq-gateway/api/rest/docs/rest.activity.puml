@@ -1,0 +1,22 @@
+@startuml
+start
+:Receive HTTP POST request;
+:Decode JSON body;
+if (JSON valid?) then (yes)
+  :Validate required fields;
+  if (Input valid?) then (yes)
+    :Invoke GW operation;
+    if (GW error?) then (yes)
+      :Set status=error, HTTP 502;
+    else (no)
+      :Set status=ok;
+    endif
+    :Write JSON response;
+  else (no)
+    :Return HTTP 400;
+  endif
+else (no)
+  :Return HTTP 400;
+endif
+stop
+@enduml

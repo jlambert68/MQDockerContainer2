@@ -1,0 +1,17 @@
+@startuml
+start
+:Receive gRPC request;
+:Validate required fields;
+if (Validation ok?) then (yes)
+  :Call GW operation\n(Put/Get/Browse*/InquireQueue);
+  if (GW error?) then (yes)
+    :Build response\nstatus=error;
+  else (no)
+    :Build response\nstatus=ok;
+  endif
+else (no)
+  :Build response\nstatus=error (input);
+endif
+:Return gRPC response;
+stop
+@enduml

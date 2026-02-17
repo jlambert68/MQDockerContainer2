@@ -1,0 +1,22 @@
+@startuml
+start
+:Read env config;
+:Build MQ connection options;
+if (TLS enabled?) then (yes)
+  :Validate TLS settings;
+  :Attach SSL config;
+endif
+:Connect to Queue Manager;
+:Serve operations;
+fork
+  :Put -> MQOPEN output -> MQPUT;
+fork again
+  :Get -> MQOPEN input -> MQGET;
+fork again
+  :BrowseFirst/BrowseNext\nmanage browse sessions + TTL;
+fork again
+  :InquireQueue -> MQINQ selectors;
+end fork
+:Close sessions and disconnect on shutdown;
+stop
+@enduml

@@ -1,0 +1,127 @@
+@startuml
+hide footbox
+autonumber
+
+title MQ REST Client -> MQ Gateway -> IBM MQ
+
+actor "business-client-rest" as App
+participant "mqrest.Client" as Client
+participant "http.Client" as HTTP
+participant "mq-gateway REST Handler" as REST
+participant "mqcore.Gateway" as GW
+participant "IBM MQ" as MQ
+
+App -> Client: NewClient(cfg)
+alt TLSConfig is nil
+  Client -> HTTP: create client (timeout only)
+else TLSConfig provided
+  Client -> HTTP: clone DefaultTransport
+  Client -> HTTP: set TLS config on transport
+end
+
+== Put messages ==
+App -> Client: Put(queue, "Hello via REST!")
+Client -> HTTP: POST /put (JSON)
+HTTP -> REST: /put
+REST -> GW: Put(queue, message)
+GW -> MQ: MQPUT
+MQ --> GW: ok
+GW --> REST: ok
+REST --> HTTP: 200 {status:"ok"}
+HTTP --> Client: PutResponse
+Client --> App: PutResponse
+
+App -> Client: Put(queue, "Hello 2 via REST!")
+Client -> HTTP: POST /put
+HTTP -> REST: /put
+REST -> GW: Put(...)
+GW -> MQ: MQPUT
+MQ --> GW: ok
+GW --> REST: ok
+REST --> HTTP: 200
+HTTP --> Client: PutResponse
+Client --> App: PutResponse
+
+== Browse ==
+App -> Client: BrowseFirst(queue)
+Client -> HTTP: POST /browse/first
+HTTP -> REST: /browse/first
+REST -> GW: BrowseFirst(queue)
+GW -> MQ: MQGET(BROWSE_FIRST)
+MQ --> GW: message + browse_id
+GW --> REST: message + browse_id
+REST --> HTTP: 200 {message,browse_id}
+HTTP --> Client: BrowseResponse
+Client --> App: BrowseResponse
+
+alt browse_id exists
+  App -> Client: BrowseNext(browse_id)
+  Client -> HTTP: POST /browse/next
+  HTTP -> REST: /browse/next
+  REST -> GW: BrowseNext(browse_id)
+  GW -> MQ: MQGET(BROWSE_NEXT)
+  MQ --> GW: next message/empty
+  GW --> REST: browse result
+  REST --> HTTP: 200
+  HTTP --> Client: BrowseResponse
+  Client --> App: BrowseResponse
+end
+
+== Queue attributes ==
+App -> Client: InquireQueue(queue)
+Client -> HTTP: POST /inquire/queue
+HTTP -> REST: /inquire/queue
+REST -> GW: InquireQueue(queue)
+GW -> MQ: Inquire queue attributes
+MQ --> GW: QueueInfo
+GW --> REST: QueueInfo
+REST --> HTTP: 200 QueueInfo
+HTTP --> Client: InquireQueueResponse
+Client --> App: InquireQueueResponse
+
+== Destructive reads ==
+App -> Client: Get(queue)
+Client -> HTTP: POST /get
+HTTP -> REST: /get
+REST -> GW: Get(queue)
+GW -> MQ: MQGET (destructive)
+MQ --> GW: message/empty
+GW --> REST: get result
+REST --> HTTP: 200
+HTTP --> Client: GetResponse
+Client --> App: GetResponse
+
+App -> Client: InquireQueue(queue)
+Client -> HTTP: POST /inquire/queue
+HTTP -> REST: /inquire/queue
+REST -> GW: InquireQueue(queue)
+GW -> MQ: Inquire queue attributes
+MQ --> GW: QueueInfo
+GW --> REST: QueueInfo
+REST --> HTTP: 200 QueueInfo
+HTTP --> Client: InquireQueueResponse
+Client --> App: InquireQueueResponse
+
+App -> Client: Get(queue)
+Client -> HTTP: POST /get
+HTTP -> REST: /get
+REST -> GW: Get(queue)
+GW -> MQ: MQGET (destructive)
+MQ --> GW: message/empty
+GW --> REST: get result
+REST --> HTTP: 200
+HTTP --> Client: GetResponse
+Client --> App: GetResponse
+
+App -> Client: InquireQueue(queue)
+Client -> HTTP: POST /inquire/queue
+HTTP -> REST: /inquire/queue
+REST -> GW: InquireQueue(queue)
+GW -> MQ: Inquire queue attributes
+MQ --> GW: QueueInfo
+GW --> REST: QueueInfo
+REST --> HTTP: 200 QueueInfo
+HTTP --> Client: InquireQueueResponse
+Client --> App: InquireQueueResponse
+
+@enduml

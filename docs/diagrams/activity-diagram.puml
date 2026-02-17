@@ -1,0 +1,51 @@
+@startuml
+
+title MQ REST Workflow - Activity Diagram
+
+start
+
+:Create mqrest.Client;
+:PUT message #1;
+if (PUT #1 success?) then (yes)
+else (no)
+  :Return error;
+  stop
+endif
+
+:PUT message #2;
+if (PUT #2 success?) then (yes)
+else (no)
+  :Return error;
+  stop
+endif
+
+:BrowseFirst(queue);
+if (browse_id returned?) then (yes)
+  :BrowseNext(browse_id);
+else (no)
+  :Skip BrowseNext;
+endif
+
+:InquireQueue (before GET);
+
+:Get(queue) #1;
+if (empty?) then (yes)
+  :No message consumed;
+else (no)
+  :Message consumed;
+endif
+
+:InquireQueue (after GET #1);
+
+:Get(queue) #2;
+if (empty?) then (yes)
+  :No second message consumed;
+else (no)
+  :Second message consumed;
+endif
+
+:InquireQueue (after GET #2);
+:Return responses to caller;
+
+stop
+@enduml

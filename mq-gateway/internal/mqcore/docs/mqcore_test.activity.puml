@@ -1,0 +1,13 @@
+@startuml
+start
+:Run unit tests;
+:Test random browse ID generation;
+:Test attribute conversion helpers;
+:Test environment helpers\n(getenv/getbool);
+if (Assertions pass?) then (yes)
+  :Report success;
+else (no)
+  :Report failure;
+endif
+stop
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+start
+:Build client config;
+if (Credentials provided?) then (yes)
+  :Use provided transport credentials;
+else (no)
+  if (TLS config provided?) then (yes)
+    :Use TLS credentials;
+  else (no)
+    :Use insecure transport;
+  endif
+endif
+:Dial gRPC server;
+:Invoke RPC methods via generated client;
+:Close connection on shutdown;
+stop
+@enduml

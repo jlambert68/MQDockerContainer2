@@ -1,0 +1,8 @@
+@startuml
+start
+:Init(service);
+:Create slog JSON handler to stdout;
+:Create logger with service attribute;
+:Set as default logger;
+stop
+@enduml

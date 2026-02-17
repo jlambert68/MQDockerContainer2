@@ -1,0 +1,18 @@
+@startuml
+start
+:Init logging;
+:Wait for MQ startup window;
+:Create MQ gateway connection;
+if (Connected?) then (yes)
+  :Create REST server;
+  :Create gRPC server;
+  :Start both servers in goroutines;
+  :Wait for SIGINT/SIGTERM;
+  :GracefulStop gRPC;
+  :Shutdown REST with timeout;
+  :Close MQ gateway;
+else (no)
+  :Log error and exit;
+endif
+stop
+@enduml

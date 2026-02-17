@@ -1,0 +1,20 @@
+@startuml
+start
+:Create REST client config;
+if (TLS config provided?) then (yes)
+  :Clone default transport + set TLS config;
+else (no)
+  :Use default HTTP transport;
+endif
+:Build HTTP client with timeout;
+:For each operation call post(path, req);
+:Marshal request JSON;
+:POST request;
+:Decode response JSON;
+if (HTTP status >= 400?) then (yes)
+  :Return error;
+else (no)
+  :Return typed response;
+endif
+stop
+@enduml

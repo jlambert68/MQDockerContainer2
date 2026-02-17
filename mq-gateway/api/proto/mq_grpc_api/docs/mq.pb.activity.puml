@@ -1,0 +1,9 @@
+@startuml
+start
+:Client/server uses protobuf message type;
+:Reset/String/ProtoReflect accessors run as needed;
+:Marshal message for transport;
+:Unmarshal received bytes;
+:Get* accessors expose typed fields;
+stop
+@enduml

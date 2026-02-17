@@ -1,0 +1,16 @@
+@startuml
+start
+:Load cert/key or P12 bundle;
+if (PEM path selected?) then (yes)
+  :Parse certificate chain;
+  :Parse/decrypt private key if needed;
+else (no)
+  :Decode PKCS#12 bundle;
+endif
+if (CA file provided?) then (yes)
+  :Load Root CAs;
+endif
+:Create tls.Config\n(min TLS 1.2);
+:Return tls.Config;
+stop
+@enduml

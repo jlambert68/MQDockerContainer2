@@ -1,0 +1,8 @@
+@startuml
+start
+:Call NewGateway();
+:Create internal mqcore gateway;
+:Return public facade interface;
+:Delegate Put/Get/Browse/Inquire/Close to internal gateway;
+stop
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+start
+:Create gRPC client stub\n(NewMqGrpcServicesClient);
+:Invoke RPC method;
+:Client stub executes unary call;
+:Server handler decodes request;
+:Dispatch to service implementation;
+:Encode and return response;
+stop
+@enduml
