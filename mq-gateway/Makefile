@@ -26,3 +26,8 @@ Run_UnitTests_Verbose_docker-compose.debug.mq.local:
       -e CGO_LDFLAGS="-L/src/mq-gateway/mq-client/tools/lib64 -Wl,-rpath,/src/mq-gateway/mq-client/tools/lib64" \
       golang:1.25 bash -c \
       "apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev pkg-config ca-certificates && go test -v ./..."
+
+Run_UnitTests_Local:
+	CGO_CFLAGS="-I$$PWD/mq-client/tools/c/include -I$$PWD/mq-client/tools/inc" \
+	CGO_LDFLAGS="-L$$PWD/mq-client/tools/lib64 -Wl,-rpath,$$PWD/mq-client/tools/lib64" \
+	go test ./...
