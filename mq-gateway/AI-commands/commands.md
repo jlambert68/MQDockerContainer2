@@ -8,6 +8,67 @@ Run commands from:
 cd mq-gateway
 ```
 
+## 0. Update Missing Docs/Diagrams (Run From Repo Root)
+
+Run from repository root (`MQDockerContainer`). This creates missing docs placeholders only (does not overwrite existing files):
+
+```bash
+set -e
+
+# Create missing docs/<name>.md and docs/<name>.activity.puml for every .go file in mq-gateway
+for f in $(find mq-gateway -type f -name '*.go' | sort); do
+  d="$(dirname "$f")/docs"
+  b="$(basename "$f" .go)"
+  m="$d/$b.md"
+  p="$d/$b.activity.puml"
+
+  mkdir -p "$d"
+
+  if [ ! -f "$m" ]; then
+    cat > "$m" <<EOF
+# $b.go
+
+Source: \`$f\`
+
+## Purpose
+
+TODO: describe behavior and responsibilities.
+EOF
+  fi
+
+  if [ ! -f "$p" ]; then
+    cat > "$p" <<'EOF'
+@startuml
+start
+:TODO add activity flow;
+stop
+@enduml
+EOF
+  fi
+done
+
+# Create missing docs/<test_name>.md for each *_test.go
+for f in $(find mq-gateway -type f -name '*_test.go' | sort); do
+  d="$(dirname "$f")/docs"
+  b="$(basename "$f" .go)"
+  m="$d/$b.md"
+
+  mkdir -p "$d"
+
+  if [ ! -f "$m" ]; then
+    cat > "$m" <<EOF
+# $b.go
+
+Source: \`$f\`
+
+## Test coverage
+
+TODO: describe key test cases and assertions.
+EOF
+  fi
+done
+```
+
 ## 1. Run Unit Tests
 
 ### Local (host)
@@ -66,6 +127,43 @@ done
 ```bash
 test -f ../docs/mq-gateway-user-guide.md || echo "MISSING ../docs/mq-gateway-user-guide.md"
 test -f ../docs/diagrams/mqrest-client-sequence.puml || echo "MISSING ../docs/diagrams/mqrest-client-sequence.puml"
+```
+
+## 4.1 Verify Root docs/ Folder Quality (Run From Repo Root)
+
+Run from repository root (`MQDockerContainer`) to validate only `/docs`:
+
+```bash
+set -e
+
+echo "== Root docs files =="
+find docs -maxdepth 3 -type f | sort
+
+echo "== Root docs counts =="
+echo "all: $(find docs -type f | wc -l)"
+echo "md: $(find docs -type f -name '*.md' | wc -l)"
+echo "puml: $(find docs -type f -name '*.puml' | wc -l)"
+
+echo "== Required root docs =="
+test -f docs/mq-gateway-user-guide.md || echo "MISSING docs/mq-gateway-user-guide.md"
+test -f docs/diagrams/mqrest-client-sequence.puml || echo "MISSING docs/diagrams/mqrest-client-sequence.puml"
+
+echo "== Empty files =="
+find docs -type f -size 0 -print
+
+echo "== Placeholder markers (TODO/TBD/FIXME) =="
+grep -RIn 'TODO\|TBD\|FIXME' docs || true
+
+echo "== Markdown title check (# ...) =="
+for f in $(find docs -type f -name '*.md' | sort); do
+  head -n 1 "$f" | grep -q '^# ' || echo "BAD_MD_TITLE $f"
+done
+
+echo "== PlantUML boundary checks =="
+for f in $(find docs -type f -name '*.puml' | sort); do
+  grep -q '^@startuml' "$f" || echo "BAD_PUML_START $f"
+  grep -q '^@enduml' "$f" || echo "BAD_PUML_END $f"
+done
 ```
 
 ## 5. Quick Drift Check (What Changed)
