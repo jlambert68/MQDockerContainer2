@@ -1,0 +1,17 @@
+@startuml
+start
+:Create client without TLS config;
+:Assert default transport is nil;
+:Create client with TLS config;
+:Assert transport is configured;
+:Start HTTP test server for Put;
+:Call Put and verify path/method/status;
+:Start HTTP test server returning 502;
+:Call Get;
+if (Error returned for HTTP >= 400?) then (yes)
+  :Pass;
+else (no)
+  :Fail test;
+endif
+stop
+@enduml
