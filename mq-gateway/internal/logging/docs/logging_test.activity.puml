@@ -1,0 +1,11 @@
+@startuml
+start
+:Call Init(\"mq-gateway-test\");
+if (slog.Default() configured?) then (yes)
+  :Emit smoke-test log message;
+  :Pass;
+else (no)
+  :Fail test;
+endif
+stop
+@enduml

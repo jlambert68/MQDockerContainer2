@@ -1,0 +1,19 @@
+@startuml
+start
+:Validate generated message getters and Reset behavior;
+:Call Unimplemented server Put method;
+if (Unimplemented error returned?) then (yes)
+  :Continue;
+else (no)
+  :Fail test;
+endif
+:Start bufconn gRPC server with test implementation;
+:Dial in-memory client connection;
+:Invoke Put RPC through generated client;
+if (RPC status == ok?) then (yes)
+  :Verify service descriptor has 5 methods and no streams;
+else (no)
+  :Fail test;
+endif
+stop
+@enduml

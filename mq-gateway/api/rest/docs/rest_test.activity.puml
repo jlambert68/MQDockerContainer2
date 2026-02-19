@@ -1,0 +1,24 @@
+@startuml
+start
+:Create REST handler with fake gateway;
+:Test Put success with valid JSON;
+if (HTTP 200 and status=ok?) then (yes)
+  :Continue;
+else (no)
+  :Fail test;
+endif
+:Test Put with invalid JSON;
+:Assert HTTP 400;
+:Test BrowseNext without browse_id;
+:Assert HTTP 400;
+:Test InquireQueue when backend returns error;
+:Assert HTTP 502 and status=error;
+:Start test server with Routes();
+:POST to all expected endpoints;
+if (Any endpoint returns 404?) then (yes)
+  :Fail test;
+else (no)
+  :All routes registered;
+endif
+stop
+@enduml

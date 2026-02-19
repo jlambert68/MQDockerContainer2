@@ -1,0 +1,22 @@
+@startuml
+start
+:Generate temporary certificates/keys in test directory;
+:LoadClientTLSConfig with cert/key/ca files;
+if (TLS config contains client certificate?) then (yes)
+  :Continue;
+else (no)
+  :Fail test;
+endif
+:Create encrypted private key PEM;
+:Call LoadClientTLSConfigFromEnv without password env;
+:Assert missing-password error;
+:Call parsePrivateKey with empty password;
+:Assert password-required error;
+:Call parsePrivateKey with correct password;
+if (Key parse succeeds?) then (yes)
+  :Pass;
+else (no)
+  :Fail test;
+endif
+stop
+@enduml

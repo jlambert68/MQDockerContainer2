@@ -1,0 +1,16 @@
+@startuml
+start
+:Start bufconn gRPC server with test service;
+:Build mqgrpc client using in-memory dialer + insecure credentials;
+if (NewClient succeeds?) then (yes)
+  :Call Put RPC via client;
+  if (Response status == ok?) then (yes)
+    :Close client and stop server;
+  else (no)
+    :Fail test;
+  endif
+else (no)
+  :Fail test;
+endif
+stop
+@enduml

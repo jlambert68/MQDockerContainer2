@@ -1,0 +1,17 @@
+@startuml
+start
+:Create Server with fake gateway;
+:Test Put with empty request;
+if (Validation error expected?) then (yes)
+  :Assert status=error with message;
+else (no)
+  :Fail test;
+endif
+:Test Put when gateway returns error;
+:Assert status=error;
+:Test InquireQueue success path;
+:Assert status=ok and queue/depth fields;
+:Test BrowseNext with missing browse_id;
+:Assert status=error;
+stop
+@enduml

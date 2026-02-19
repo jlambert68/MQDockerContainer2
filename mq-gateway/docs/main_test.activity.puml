@@ -1,0 +1,16 @@
+@startuml
+start
+:Set MAIN_TEST_ENV=value;
+:Call getenv(\"MAIN_TEST_ENV\", \"default\");
+if (Returns \"value\"?) then (yes)
+  :Call getenv(\"MAIN_TEST_ENV_MISSING\", \"default\");
+  if (Returns \"default\"?) then (yes)
+    :Pass;
+  else (no)
+    :Fail test;
+  endif
+else (no)
+  :Fail test;
+endif
+stop
+@enduml

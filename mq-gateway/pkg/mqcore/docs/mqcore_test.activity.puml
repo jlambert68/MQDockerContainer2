@@ -1,0 +1,11 @@
+@startuml
+start
+:Compile-time check gateway implements Gateway interface;
+:Construct QueueInfo with sample values;
+if (Name non-empty and MaxDepth > 0?) then (yes)
+  :Pass;
+else (no)
+  :Fail test;
+endif
+stop
+@enduml
